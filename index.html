@@ -102,11 +102,11 @@ td.l{text-align:left}
 
 /* Lock screen: covers the page until the password unwraps the data key */
 .lock{position:fixed;inset:0;z-index:20;background:var(--brand);display:flex;align-items:center;justify-content:center;padding:24px 16px}
-.lock[hidden]{display:none}
+.lock[hidden],#cp-out[hidden]{display:none!important}
 .lock form{background:#fff;border-radius:16px;box-shadow:0 8px 30px rgba(90,0,8,.3);padding:22px 18px;width:100%;max-width:340px;display:flex;flex-direction:column;gap:12px;align-items:stretch;text-align:center}
 .lock img{width:84px;height:84px;margin:0 auto;border-radius:16px}
 .lock h2{margin:0;font-size:1.2rem}
-.lock input[type=password]{font:500 1rem var(--body);padding:11px 12px;border:1px solid var(--line);border-radius:10px;min-height:46px}
+.lock input[type=password],.lock input[type=email],.lock textarea{font:500 1rem var(--body);padding:11px 12px;border:1px solid var(--line);border-radius:10px;min-height:46px}
 .lock label{font-size:.82rem;color:var(--muted);display:flex;gap:8px;align-items:center;justify-content:center}
 .lock button{font:600 1rem var(--body);background:var(--brand);color:#fff;border:0;border-radius:10px;min-height:46px;cursor:pointer}
 .lock .lerr{color:var(--brand-dark);font-size:.85rem;min-height:1.2em;margin:0}
@@ -114,17 +114,32 @@ td.l{text-align:left}
 </style>
 </head>
 <body>
+<div class="lock" id="cp" hidden><form id="cpf" autocomplete="on">
+  <h2>Set the password</h2>
+  <p class="note" style="margin:0">Choose the login email and password everyone will use. Nothing is changed until you send me the code below.</p>
+  <input type="email" id="cp-em" name="username" autocomplete="username" placeholder="Login email" aria-label="Login email" required>
+  <input type="password" id="cp-pw" name="new-password" autocomplete="new-password" placeholder="New password (8+ characters)" aria-label="New password" minlength="8" required>
+  <input type="password" id="cp-pw2" autocomplete="new-password" placeholder="Type it again" aria-label="Type the new password again" minlength="8" required>
+  <button type="submit">Make code</button>
+  <p class="lerr" id="cp-err" role="alert"></p>
+  <div id="cp-out" hidden style="display:flex;flex-direction:column;gap:8px">
+    <p class="note" style="margin:0">Copy this code and send it to me in the chat. It does not contain your password. Once I put it on the website, the new password starts working.</p>
+    <textarea id="cp-code" rows="4" readonly style="font:12px/1.4 monospace;padding:8px;border:1px solid var(--line);border-radius:10px;resize:none"></textarea>
+    <button type="button" id="cp-copy">Copy code</button>
+  </div>
+  <button type="button" id="cp-close" style="background:#fff;color:var(--brand);border:1px solid var(--line)">Close</button>
+</form></div>
 <div class="lock" id="lock"><form id="lockf" autocomplete="on">
   <img src="logo.png" alt="Sushinaa"><h2>Sushinaa Sales</h2>
-  <input type="text" name="username" value="sushinaa" autocomplete="username" hidden>
-  <input type="password" id="pw" autocomplete="current-password" placeholder="Password" aria-label="Password" required>
+  <input type="email" id="em" name="username" autocomplete="username" inputmode="email" placeholder="Email" aria-label="Email" required>
+  <input type="password" id="pw" name="password" autocomplete="current-password" placeholder="Password" aria-label="Password" required>
   <label><input type="checkbox" id="remember" checked> Remember on this device</label>
   <button type="submit" id="unlock">Unlock</button>
   <p class="lerr" id="lerr" role="alert"></p>
 </form></div>
 <header class="band"><div class="in">
   <div class="brand"><img src="logo.png" alt="Sushinaa"><div><h1>Sushinaa Sales</h1><small>Delivery sales · all apps</small></div></div>
-  <div style="display:flex;gap:8px;align-items:center"><label><span class="visually-hidden" style="position:absolute;left:-9999px">Month</span><select id="month" aria-label="Month"></select></label><button type="button" class="lockbtn" id="lockbtn">Lock</button></div>
+  <div style="display:flex;gap:8px;align-items:center"><label><span class="visually-hidden" style="position:absolute;left:-9999px">Month</span><select id="month" aria-label="Month"></select></label><button type="button" class="lockbtn" id="cpbtn">Password</button><button type="button" class="lockbtn" id="lockbtn">Lock</button></div>
 </div></header>
 <main>
   <p class="asof" id="asof">Loading…</p>
@@ -241,11 +256,11 @@ const sum=(a,f)=>d3.sum(a,f);
 const inMonth=()=>rows.filter(r=>r.date.slice(0,7)===cur);
 
 // ---- Data is AES-GCM encrypted in enc/*.bin; the password unwraps the data key from key.json ----
-let DK=null;
+let DK=null,RAW=null;
 const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 const store={get(){try{return localStorage.getItem('sk')}catch(e){return null}},set(v){try{localStorage.setItem('sk',v)}catch(e){}},del(){try{localStorage.removeItem('sk')}catch(e){}}};
 async function importDK(raw){return crypto.subtle.importKey('raw',raw,'AES-GCM',false,['decrypt'])}
-async function unwrap(pw){
+async function unwrap(em,pw){pw=em.trim().toLowerCase()+'\n'+pw;
   const k=await fetch('key.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.json());
   const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
   const kek=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(k.salt),iterations:k.iter,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);
@@ -256,13 +271,26 @@ async function getEnc(path){
   return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},DK,buf.slice(12)));
 }
 const encCsv=path=>getEnc(path).then(t=>d3.csvParse(t));
-function showLock(msg){$('lock').hidden=false;$('lerr').textContent=msg||'';setTimeout(()=>{try{$('pw').focus()}catch(e){}},50)}
+function showLock(msg){$('lock').hidden=false;$('lerr').textContent=msg||'';setTimeout(()=>{try{($('em').value?$('pw'):$('em')).focus()}catch(e){}},50)}
+$('cpbtn').onclick=()=>{$('cp').hidden=false;$('cp-out').hidden=true;$('cp-err').textContent=''};
+$('cp-close').onclick=()=>{$('cp').hidden=true;['cp-pw','cp-pw2'].forEach(i=>$(i).value='')};
+$('cp-copy').onclick=async()=>{try{await navigator.clipboard.writeText($('cp-code').value);$('cp-copy').textContent='Copied'}catch(e){$('cp-code').select()}};
+$('cpf').onsubmit=async e=>{e.preventDefault();const em=$('cp-em').value.trim().toLowerCase(),a=$('cp-pw').value,b2=$('cp-pw2').value;
+  if(a!==b2){$('cp-err').textContent='The two passwords are different.';return}
+  if(!RAW){$('cp-err').textContent='Please lock and unlock once, then try again.';return}
+  const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),it=600000;
+  const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(em+'\n'+a),'PBKDF2',false,['deriveKey']);
+  const kek=await crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:it,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt']);
+  const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},kek,RAW));
+  const B=u=>btoa(String.fromCharCode(...u));
+  $('cp-code').value=JSON.stringify({v:1,iter:it,salt:B(salt),iv:B(iv),key:B(ct)});$('cp-out').hidden=false;$('cp-err').textContent='';$('cp-copy').textContent='Copy code';
+  ['cp-pw','cp-pw2'].forEach(i=>$(i).value='')};
 $('lockf').onsubmit=async e=>{e.preventDefault();$('lerr').textContent='';$('unlock').disabled=true;$('unlock').textContent='Checking…';
-  try{const raw=await unwrap($('pw').value);DK=await importDK(raw);if($('remember').checked)store.set(btoa(String.fromCharCode(...raw)));$('lock').hidden=true;$('pw').value='';start()}
-  catch(err){showLock('Wrong password. Please try again.')}
+  try{const raw=await unwrap($('em').value,$('pw').value);RAW=raw;DK=await importDK(raw);if($('remember').checked)store.set(btoa(String.fromCharCode(...raw)));$('lock').hidden=true;$('pw').value='';start()}
+  catch(err){showLock('Wrong email or password. Please try again.')}
   $('unlock').disabled=false;$('unlock').textContent='Unlock'};
 $('lockbtn').onclick=()=>{store.del();location.hash='';location.reload()};
-(async()=>{const sk=store.get();if(sk){try{DK=await importDK(b64(sk));$('lock').hidden=true;start();return}catch(e){store.del()}}showLock()})();
+(async()=>{const sk=store.get();if(sk){try{RAW=b64(sk);DK=await importDK(RAW);$('lock').hidden=true;start();return}catch(e){store.del()}}showLock()})();
 let started=false;
 function start(){if(started)return;started=true;
 Promise.all([
