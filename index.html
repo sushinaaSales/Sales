@@ -136,6 +136,15 @@ td.l{text-align:left}
   </div>
   <div class="view" id="view-orders" hidden>
     <section class="card">
+      <h2>Orders by hour</h2>
+      <div class="seg" role="group" aria-label="Split by"><button type="button" id="h-br" aria-pressed="true">By branch</button><button type="button" id="h-app" aria-pressed="false">By app</button></div>
+      <div class="filters"><select id="h-day" aria-label="Day"></select><select id="h-filter" aria-label="Filter"></select></div>
+      <div class="legend" id="h-legend"></div>
+      <div class="chart" id="h-chart" style="min-height:220px"></div>
+      <div class="wrap"><table><thead id="h-head"></thead><tbody id="h-body"></tbody></table></div>
+      <p class="note">Orders that were not cancelled, by the hour they were placed (Qatar time). "Daily average" divides each hour's orders by the number of days in the month so far.</p>
+    </section>
+    <section class="card">
       <h2>Order history</h2>
       <div class="filters">
         <select id="o-branch" aria-label="Branch"></select><select id="o-app" aria-label="App"></select>
@@ -315,7 +324,7 @@ async function showView(){
   if(!os){if(msg)$(msg).textContent='Order details are not available for this month yet.';
     if(v==='orders')$('o-body').replaceChildren();if(v==='items')$('i-body').replaceChildren();if(v==='payouts'){$('p-body').replaceChildren();['p1','p2','p3','p4'].forEach(i=>$(i).textContent='—')}if(v==='cancelled'){['c-br','c-rs','c-list'].forEach(i=>$(i).replaceChildren());['c1','c2','c3','c4'].forEach(i=>$(i).textContent='—');$('c4s').textContent='No order details for this month'}
     return}
-  if(v==='payouts')drawPayouts(os);if(v==='orders')drawOrders(os);if(v==='cancelled')drawCancelled(os);if(v==='items')drawItems(os);
+  if(v==='payouts')drawPayouts(os);if(v==='orders'){drawHours(os);drawOrders(os)}if(v==='cancelled')drawCancelled(os);if(v==='items')drawItems(os);
 }
 function drawOrders(os){
   const b=$('o-branch').value,a=$('o-app').value,st=$('o-status').value,qq=$('o-q').value.trim().toLowerCase();
@@ -376,6 +385,37 @@ function drawPayouts(os){
 $('p-app').onclick=()=>{pBy='app';$('p-app').setAttribute('aria-pressed','true');$('p-br').setAttribute('aria-pressed','false');showView()};
 $('p-br').onclick=()=>{pBy='branch';$('p-br').setAttribute('aria-pressed','true');$('p-app').setAttribute('aria-pressed','false');showView()};
 $('p-filter').onchange=()=>showView();
+let hBy='branch';
+function drawHours(os){
+  const keys=hBy==='branch'?BR:APPS,fk=hBy==='branch'?'branch':'app',ok=hBy==='branch'?'app':'branch';
+  const dsel=$('h-day'),days=[...new Set(os.map(o=>o.date))].sort().reverse();
+  if(dsel.dataset.m!==cur){dsel.dataset.m=cur;dsel.replaceChildren(new Option('Daily average','avg'),new Option('Whole month (total)','all'),...days.map(d=>new Option(D(P(d)),d)))}
+  const fl=$('h-filter');if(fl.dataset.by!==hBy){fl.dataset.by=hBy;fl.replaceChildren(new Option(hBy==='branch'?'All apps':'All branches',''),...(hBy==='branch'?APPS:BR).map(o=>new Option(o,o)))}
+  const dv=dsel.value,div=dv==='avg'?Math.max(1,days.length):1;
+  const xs=os.filter(o=>o.status!=='Cancelled'&&(!fl.value||o[ok]===fl.value)&&(dv==='avg'||dv==='all'||o.date===dv));
+  const H=d3.range(24).map(h=>{const r={h};keys.forEach(k=>r[k]=0);return r});
+  xs.forEach(o=>{H[+o.time.slice(11,13)][o[fk]]+=1});
+  H.forEach(r=>{keys.forEach(k=>r[k]/=div);r.total=d3.sum(keys,k=>r[k])});
+  const fmt=div>1?d3.format('.1f'):q,lab=h=>String(h).padStart(2,'0')+':00';
+  $('h-legend').replaceChildren(...keys.map((b,i)=>{const s=document.createElement('span'),sw=document.createElement('i');sw.style.background=COL[i];s.append(sw,b);return s}));
+  const el=$('h-chart');el.replaceChildren();
+  const W=Math.max(260,el.clientWidth),Hh=220,m={t:10,r:6,b:24,l:34};
+  const x=d3.scaleBand().domain(d3.range(24)).range([m.l,W-m.r]).padding(.15),y=d3.scaleLinear().domain([0,d3.max(H,r=>r.total)||1]).nice().range([Hh-m.b,m.t]);
+  const svg=d3.select(el).append('svg').attr('width','100%').attr('viewBox',`0 0 ${W} ${Hh}`).attr('role','img').attr('aria-label','Orders by hour of day, stacked');
+  svg.append('g').attr('class','grid').attr('transform',`translate(${m.l},0)`).call(d3.axisLeft(y).ticks(4).tickSize(-(W-m.l-m.r))).call(a=>a.select('.domain').remove());
+  svg.append('g').attr('transform',`translate(0,${Hh-m.b})`).call(d3.axisBottom(x).tickSize(0).tickPadding(7).tickFormat(h=>h%3?'':String(h).padStart(2,'0'))).call(a=>a.select('.domain').remove());
+  svg.append('g').selectAll('g').data(d3.stack().keys(keys)(H)).join('g').style('fill',(s,i)=>COL[i]).selectAll('rect').data(s=>s).join('rect')
+    .attr('x',d=>x(d.data.h)).attr('width',x.bandwidth()).attr('y',d=>y(d[1])).attr('height',d=>Math.max(0,y(d[0])-y(d[1])));
+  const tip=d3.select(el).append('div').attr('class','tip').style('display','none');
+  svg.append('g').selectAll('rect').data(H).join('rect').attr('x',d=>x(d.h)-x.step()*.075).attr('width',x.step()).attr('y',m.t).attr('height',Hh-m.b-m.t).style('fill','transparent')
+    .on('pointerenter pointermove pointerdown',(e,d)=>{tip.style('display',null).selectAll('*').remove();tip.append('b').text(lab(d.h)+'–'+String((d.h+1)%24).padStart(2,'0')+':00 · '+fmt(d.total)+' orders');keys.forEach(k=>tip.append('div').text(k+': '+fmt(d[k])));const[px]=d3.pointer(e,el),tw=tip.node().offsetWidth;tip.style('left',Math.min(Math.max(0,px+10),el.clientWidth-tw)+'px').style('top','6px')})
+    .on('pointerleave',()=>tip.style('display','none'));
+  d3.select('#h-head').selectAll('tr').data([0]).join('tr').selectAll('th').data(['Hour',...keys,'Total']).join('th').text(d=>d);
+  $('h-body').replaceChildren(...H.filter(r=>r.total>0).map(r=>{const tr=document.createElement('tr');td(tr,lab(r.h));keys.forEach(k=>td(tr,fmt(r[k])));td(tr,fmt(r.total),'tc');return tr}));
+}
+$('h-br').onclick=()=>{hBy='branch';$('h-br').setAttribute('aria-pressed','true');$('h-app').setAttribute('aria-pressed','false');showView()};
+$('h-app').onclick=()=>{hBy='app';$('h-app').setAttribute('aria-pressed','true');$('h-br').setAttribute('aria-pressed','false');showView()};
+$('h-day').onchange=()=>showView();$('h-filter').onchange=()=>showView();
 window.addEventListener('hashchange',()=>{showView();window.scrollTo(0,0)});
 </script>
 </body>
