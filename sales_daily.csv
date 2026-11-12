@@ -1,0 +1,178 @@
+date,branch,app,orders,sales_qar
+2026-11-01,Al Khor,Keeta,1,68.0
+2026-11-01,Al Khor,Rafeeq,2,375.0
+2026-11-01,Al Khor,Snoonu,13,1376.0
+2026-11-01,Al Khor,Talabat,8,779.0
+2026-11-01,Al Thumama,Keeta,7,660.0
+2026-11-01,Al Thumama,Rafeeq,6,930.0
+2026-11-01,Al Thumama,Snoonu,48,5402.0
+2026-11-01,Al Thumama,Talabat,27,2813.0
+2026-11-01,Downtown,Keeta,25,1859.0
+2026-11-01,Downtown,Rafeeq,10,915.0
+2026-11-01,Downtown,Snoonu,98,9481.0
+2026-11-01,Downtown,Talabat,19,1625.0
+2026-11-01,West Bay,Keeta,1,87.0
+2026-11-01,West Bay,Rafeeq,3,459.0
+2026-11-01,West Bay,Snoonu,25,2645.0
+2026-11-01,West Bay,Talabat,8,649.0
+2026-11-02,Al Khor,Rafeeq,1,108.0
+2026-11-02,Al Khor,Snoonu,15,1702.0
+2026-11-02,Al Khor,Talabat,7,752.0
+2026-11-02,Al Thumama,Keeta,5,383.0
+2026-11-02,Al Thumama,Rafeeq,4,223.0
+2026-11-02,Al Thumama,Snoonu,34,3398.0
+2026-11-02,Al Thumama,Talabat,20,1778.0
+2026-11-02,Downtown,Keeta,14,970.0
+2026-11-02,Downtown,Rafeeq,10,1076.0
+2026-11-02,Downtown,Snoonu,66,6066.0
+2026-11-02,Downtown,Talabat,33,3065.0
+2026-11-02,West Bay,Keeta,5,670.0
+2026-11-02,West Bay,Rafeeq,2,155.0
+2026-11-02,West Bay,Snoonu,19,1707.0
+2026-11-02,West Bay,Talabat,15,1422.0
+2026-11-03,Al Khor,Snoonu,12,1020.0
+2026-11-03,Al Khor,Talabat,8,561.0
+2026-11-03,Al Thumama,Keeta,4,312.0
+2026-11-03,Al Thumama,Rafeeq,3,193.0
+2026-11-03,Al Thumama,Snoonu,25,2889.0
+2026-11-03,Al Thumama,Talabat,25,2356.0
+2026-11-03,Downtown,Keeta,19,1829.0
+2026-11-03,Downtown,Rafeeq,4,474.0
+2026-11-03,Downtown,Snoonu,81,6832.0
+2026-11-03,Downtown,Talabat,28,2169.0
+2026-11-03,West Bay,Keeta,4,440.0
+2026-11-03,West Bay,Rafeeq,4,432.0
+2026-11-03,West Bay,Snoonu,18,1873.0
+2026-11-03,West Bay,Talabat,12,842.0
+2026-11-04,Al Khor,Rafeeq,2,166.0
+2026-11-04,Al Khor,Snoonu,9,704.0
+2026-11-04,Al Khor,Talabat,10,1069.0
+2026-11-04,Al Thumama,Keeta,2,150.0
+2026-11-04,Al Thumama,Rafeeq,1,60.0
+2026-11-04,Al Thumama,Snoonu,29,2715.0
+2026-11-04,Al Thumama,Talabat,22,2140.0
+2026-11-04,Downtown,Keeta,19,1372.0
+2026-11-04,Downtown,Rafeeq,5,491.0
+2026-11-04,Downtown,Snoonu,80,6706.0
+2026-11-04,Downtown,Talabat,21,1860.0
+2026-11-04,West Bay,Keeta,2,185.0
+2026-11-04,West Bay,Rafeeq,8,850.0
+2026-11-04,West Bay,Snoonu,18,1977.0
+2026-11-04,West Bay,Talabat,11,866.0
+2026-11-05,Al Khor,Keeta,1,86.0
+2026-11-05,Al Khor,Rafeeq,6,422.0
+2026-11-05,Al Khor,Snoonu,13,1022.0
+2026-11-05,Al Khor,Talabat,6,709.0
+2026-11-05,Al Thumama,Keeta,2,186.0
+2026-11-05,Al Thumama,Rafeeq,4,337.0
+2026-11-05,Al Thumama,Snoonu,33,3206.0
+2026-11-05,Al Thumama,Talabat,18,1986.0
+2026-11-05,Downtown,Keeta,18,1187.0
+2026-11-05,Downtown,Rafeeq,7,671.0
+2026-11-05,Downtown,Snoonu,88,7887.0
+2026-11-05,Downtown,Talabat,26,2225.0
+2026-11-05,West Bay,Keeta,5,587.0
+2026-11-05,West Bay,Rafeeq,7,705.0
+2026-11-05,West Bay,Snoonu,19,2553.0
+2026-11-05,West Bay,Talabat,7,571.0
+2026-11-06,Al Khor,Rafeeq,4,382.0
+2026-11-06,Al Khor,Snoonu,18,1463.0
+2026-11-06,Al Khor,Talabat,11,1151.0
+2026-11-06,Al Thumama,Keeta,4,334.0
+2026-11-06,Al Thumama,Rafeeq,3,666.0
+2026-11-06,Al Thumama,Snoonu,26,2684.0
+2026-11-06,Al Thumama,Talabat,25,2231.0
+2026-11-06,Downtown,Keeta,19,1521.0
+2026-11-06,Downtown,Rafeeq,9,1256.0
+2026-11-06,Downtown,Snoonu,78,8079.0
+2026-11-06,Downtown,Talabat,19,1537.0
+2026-11-06,West Bay,Keeta,1,58.0
+2026-11-06,West Bay,Rafeeq,4,320.0
+2026-11-06,West Bay,Snoonu,16,2648.0
+2026-11-06,West Bay,Talabat,14,1155.0
+2026-11-07,Al Khor,Rafeeq,3,257.0
+2026-11-07,Al Khor,Snoonu,13,1401.0
+2026-11-07,Al Khor,Talabat,13,1574.0
+2026-11-07,Al Thumama,Keeta,4,465.0
+2026-11-07,Al Thumama,Rafeeq,3,479.0
+2026-11-07,Al Thumama,Snoonu,34,3796.0
+2026-11-07,Al Thumama,Talabat,24,1963.0
+2026-11-07,Downtown,Keeta,19,1336.0
+2026-11-07,Downtown,Rafeeq,8,791.0
+2026-11-07,Downtown,Snoonu,82,8333.0
+2026-11-07,Downtown,Talabat,14,1299.0
+2026-11-07,West Bay,Keeta,6,325.0
+2026-11-07,West Bay,Rafeeq,6,1002.0
+2026-11-07,West Bay,Snoonu,21,2242.0
+2026-11-07,West Bay,Talabat,11,908.0
+2026-11-08,Al Khor,Snoonu,13,1317.0
+2026-11-08,Al Khor,Talabat,8,1104.0
+2026-11-08,Al Thumama,Keeta,4,321.0
+2026-11-08,Al Thumama,Rafeeq,1,53.0
+2026-11-08,Al Thumama,Snoonu,22,2539.0
+2026-11-08,Al Thumama,Talabat,25,2253.0
+2026-11-08,Downtown,Keeta,12,934.0
+2026-11-08,Downtown,Rafeeq,10,958.0
+2026-11-08,Downtown,Snoonu,62,5313.0
+2026-11-08,Downtown,Talabat,22,2038.0
+2026-11-08,West Bay,Keeta,2,143.0
+2026-11-08,West Bay,Rafeeq,7,1106.0
+2026-11-08,West Bay,Snoonu,19,2106.0
+2026-11-08,West Bay,Talabat,6,591.0
+2026-11-09,Al Khor,Rafeeq,6,539.0
+2026-11-09,Al Khor,Snoonu,13,1481.0
+2026-11-09,Al Khor,Talabat,9,574.0
+2026-11-09,Al Thumama,Keeta,4,266.0
+2026-11-09,Al Thumama,Rafeeq,5,601.0
+2026-11-09,Al Thumama,Snoonu,30,2894.0
+2026-11-09,Al Thumama,Talabat,17,1187.0
+2026-11-09,Downtown,Keeta,9,715.0
+2026-11-09,Downtown,Rafeeq,6,976.0
+2026-11-09,Downtown,Snoonu,64,5939.0
+2026-11-09,Downtown,Talabat,24,2182.0
+2026-11-09,West Bay,Keeta,2,109.0
+2026-11-09,West Bay,Rafeeq,2,158.0
+2026-11-09,West Bay,Snoonu,12,1589.0
+2026-11-09,West Bay,Talabat,9,781.0
+2026-11-10,Al Khor,Snoonu,6,552.0
+2026-11-10,Al Khor,Talabat,11,847.0
+2026-11-10,Al Thumama,Keeta,8,741.0
+2026-11-10,Al Thumama,Rafeeq,2,271.0
+2026-11-10,Al Thumama,Snoonu,28,2506.0
+2026-11-10,Al Thumama,Talabat,21,2094.0
+2026-11-10,Downtown,Keeta,17,1035.0
+2026-11-10,Downtown,Rafeeq,8,705.0
+2026-11-10,Downtown,Snoonu,78,7552.0
+2026-11-10,Downtown,Talabat,22,1467.0
+2026-11-10,West Bay,Keeta,3,264.0
+2026-11-10,West Bay,Rafeeq,5,742.0
+2026-11-10,West Bay,Snoonu,14,1323.0
+2026-11-10,West Bay,Talabat,6,534.0
+2026-11-11,Al Khor,Rafeeq,1,57.0
+2026-11-11,Al Khor,Snoonu,12,1397.0
+2026-11-11,Al Khor,Talabat,8,580.0
+2026-11-11,Al Thumama,Keeta,4,407.0
+2026-11-11,Al Thumama,Rafeeq,2,274.0
+2026-11-11,Al Thumama,Snoonu,23,2351.0
+2026-11-11,Al Thumama,Talabat,21,1824.0
+2026-11-11,Downtown,Keeta,18,1072.0
+2026-11-11,Downtown,Rafeeq,6,801.0
+2026-11-11,Downtown,Snoonu,64,6853.0
+2026-11-11,Downtown,Talabat,20,1396.0
+2026-11-11,West Bay,Keeta,5,312.0
+2026-11-11,West Bay,Rafeeq,5,341.0
+2026-11-11,West Bay,Snoonu,28,2679.0
+2026-11-11,West Bay,Talabat,9,932.0
+2026-11-12,Al Khor,Rafeeq,1,64.0
+2026-11-12,Al Khor,Snoonu,2,112.0
+2026-11-12,Al Khor,Talabat,2,174.0
+2026-11-12,Al Thumama,Keeta,1,96.0
+2026-11-12,Al Thumama,Rafeeq,2,257.0
+2026-11-12,Al Thumama,Snoonu,14,1573.0
+2026-11-12,Al Thumama,Talabat,6,534.0
+2026-11-12,Downtown,Keeta,7,488.0
+2026-11-12,Downtown,Rafeeq,6,695.0
+2026-11-12,Downtown,Snoonu,26,2327.0
+2026-11-12,Downtown,Talabat,12,951.0
+2026-11-12,West Bay,Snoonu,7,521.0
+2026-11-12,West Bay,Talabat,2,223.0

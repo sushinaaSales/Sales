@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Sushinaa Sales</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#b3122e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sushinaa Sales">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+/* Layout: phone-first single column; brand band on top, tiles 2-up, tables swipe sideways */
+:root{--brand:#b3122e;--bg:#f5f6f8;--panel:#ffffff;--fg:#191c22;--muted:#5f6775;--line:#e2e5eb;
+--c1:#b3122e;--c2:#2f6fde;--c3:#15967c;--c4:#d99a00;--warn:#b54708;
+--display:"Space Grotesk",system-ui,sans-serif;--body:Inter,system-ui,-apple-system,sans-serif;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#111318;--panel:#1a1d24;--fg:#eceef2;--muted:#9ba3b1;--line:#2a2f39;
+--c1:#ec4a64;--c2:#6195f2;--c3:#2fc7a5;--c4:#f2bb2c;--warn:#f79009;color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--body);-webkit-text-size-adjust:100%}
+.band{background:var(--brand);color:#fff;padding-top:env(safe-area-inset-top,0px)}
+.band .in{max-width:1100px;margin:0 auto;padding:18px max(16px,env(safe-area-inset-right,0px)) 18px max(16px,env(safe-area-inset-left,0px));display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand img{width:36px;height:36px;border-radius:9px}
+h1{font:700 1.35rem/1.1 var(--display);margin:0;letter-spacing:.01em}
+.band small{display:block;font-size:.78rem;opacity:.85}
+select{font:500 .95rem var(--body);padding:8px 12px;border-radius:9px;border:0;background:rgba(255,255,255,.18);color:#fff;min-height:40px}
+select option{color:#000}
+main{max-width:1100px;margin:0 auto;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(32px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:16px}
+.asof{font-size:.82rem;color:var(--muted);margin:0}
+.asof.stale{color:var(--warn);font-weight:600}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (min-width:760px){.tiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.lbl{font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.big{font:600 1.55rem/1.15 var(--display);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+@media (min-width:760px){.big{font-size:1.9rem}}
+.sub{font-size:.76rem;color:var(--muted)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;min-width:0}
+h2{font:600 1rem var(--display);margin:0 0 10px}
+.branches{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+@media (min-width:760px){.branches{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.br{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.br-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.br-name{font-weight:600;display:flex;align-items:center;gap:8px}
+.br-name i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.br-total{font:600 1.1rem var(--display);font-variant-numeric:tabular-nums}
+.bar{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--line)}
+.apps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;font-size:.74rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.apps b{display:block;color:var(--fg);font-weight:500;font-size:.82rem}
+.wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -14px;padding:0 14px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:.86rem}
+th,td{padding:8px 9px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--panel)}
+thead th{font-size:.7rem;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+tr.tot td{font-weight:600;border-top:2px solid var(--line)}
+td.tc{font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.76rem;color:var(--muted);margin-bottom:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.chart{position:relative;min-height:260px}
+.chart text{fill:var(--muted);font-size:11px;font-family:var(--body)}
+.chart .grid line{stroke:var(--line)}
+.tip{position:absolute;pointer-events:none;background:var(--panel);border:1px solid var(--line);box-shadow:0 8px 22px rgba(0,0,0,.18);border-radius:9px;padding:8px 10px;font-size:.78rem;white-space:nowrap;font-variant-numeric:tabular-nums;z-index:2}
+.tip b{display:block;margin-bottom:3px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-bottom:10px}
+.seg button{font:500 .8rem var(--body);border:0;background:transparent;color:var(--muted);padding:7px 12px;min-height:36px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--brand);color:#fff}
+button:focus-visible,select:focus-visible{outline:2px solid var(--c2);outline-offset:2px}
+.foot{font-size:.76rem;color:var(--muted);margin:0}
+.err{color:var(--warn)}
+</style>
+</head>
+<body>
+<header class="band"><div class="in">
+  <div class="brand"><img src="icon-192.png" alt=""><div><h1>Sushinaa Sales</h1><small>All delivery apps</small></div></div>
+  <label><span class="visually-hidden" style="position:absolute;left:-9999px">Month</span><select id="month" aria-label="Month"></select></label>
+</div></header>
+<main>
+  <p class="asof" id="asof">Loading…</p>
+  <section class="tiles">
+    <div class="tile"><span class="lbl">Sales</span><span class="big" id="k1">—</span><span class="sub">QAR this month</span></div>
+    <div class="tile"><span class="lbl">Orders</span><span class="big" id="k2">—</span><span class="sub">not cancelled</span></div>
+    <div class="tile"><span class="lbl">Average order</span><span class="big" id="k3">—</span><span class="sub">QAR</span></div>
+    <div class="tile"><span class="lbl">Latest day</span><span class="big" id="k4">—</span><span class="sub" id="k4s">—</span></div>
+  </section>
+  <section class="card">
+    <h2>Branches</h2>
+    <div class="branches" id="branches"></div>
+  </section>
+  <section class="card">
+    <h2>Daily sales by branch</h2>
+    <div class="legend" id="legend"></div>
+    <div class="chart" id="chart"></div>
+  </section>
+  <section class="card">
+    <h2>Sales by branch and app (QAR)</h2>
+    <div class="wrap"><table><thead><tr><th>Branch</th><th>Snoonu</th><th>Talabat</th><th>Keeta</th><th>Rafeeq</th><th>Total</th><th>Orders</th></tr></thead><tbody id="tba"></tbody></table></div>
+  </section>
+  <section class="card">
+    <h2>Day by day (QAR)</h2>
+    <div class="seg" role="group" aria-label="Table view"><button type="button" id="v-branch" aria-pressed="true">By branch</button><button type="button" id="v-app" aria-pressed="false">By app</button></div>
+    <div class="wrap"><table><thead id="tdh"></thead><tbody id="tdd"></tbody></table></div>
+  </section>
+  <p class="foot">Food sales before app commission, without delivery fees or cancelled orders, from Snoonu, Talabat, Keeta and Rafeeq. Updated every hour. Dates are when the order was placed (Qatar time); the latest day is still in progress.</p>
+</main>
+<script>
+const BR=['Downtown','Al Thumama','West Bay','Al Khor'],APPS=['Snoonu','Talabat','Keeta','Rafeeq'],COL=['var(--c1)','var(--c2)','var(--c3)','var(--c4)'];
+const q=d3.format(',.0f'),q2=d3.format(',.2f'),P=d3.utcParse('%Y-%m-%d'),D=d3.utcFormat('%a %-d %b'),M=d3.utcFormat('%B %Y');
+const $=id=>document.getElementById(id);
+let rows=[],cur=null,view='branch';
+const sum=(a,f)=>d3.sum(a,f);
+const inMonth=()=>rows.filter(r=>r.date.slice(0,7)===cur);
+
+Promise.all([
+  d3.csv('sales_daily.csv?v='+Date.now()),
+  fetch('updated.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null)
+]).then(([r,u])=>{
+  rows=r.map(x=>({date:x.date,branch:x.branch,app:x.app,orders:+x.orders,sales:+x.sales_qar}));
+  const months=[...new Set(rows.map(x=>x.date.slice(0,7)))].sort().reverse();
+  cur=months[0];
+  const sel=$('month');
+  sel.replaceChildren(...months.map(m=>new Option(M(P(m+'-01')),m)));
+  sel.value=cur;
+  sel.onchange=()=>{cur=sel.value;render()};
+  const a=$('asof');
+  if(u&&u.at){
+    const t=new Date(u.at),h=(Date.now()-t)/36e5;
+    a.textContent='Updated '+t.toLocaleString('en-GB',{timeZone:'Asia/Qatar',weekday:'short',day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})+' (Qatar time)'+(h>3?' · more than 3 hours ago':'');
+    if(h>3)a.classList.add('stale');
+  } else a.textContent='';
+  render();
+  window.addEventListener('resize',()=>drawChart());
+}).catch(()=>{$('asof').textContent='Could not load the sales data. Pull down to refresh or try again in a minute.';$('asof').classList.add('err')});
+
+$('v-branch').onclick=()=>{view='branch';$('v-branch').setAttribute('aria-pressed','true');$('v-app').setAttribute('aria-pressed','false');drawDaily()};
+$('v-app').onclick=()=>{view='app';$('v-app').setAttribute('aria-pressed','true');$('v-branch').setAttribute('aria-pressed','false');drawDaily()};
+
+function render(){
+  const rs=inMonth(),S=sum(rs,x=>x.sales),O=sum(rs,x=>x.orders);
+  $('k1').textContent=q(S);$('k2').textContent=q(O);$('k3').textContent=q2(O?S/O:0);
+  const last=d3.max(rs,x=>x.date),lr=rs.filter(x=>x.date===last);
+  $('k4').textContent=q(sum(lr,x=>x.sales));
+  $('k4s').textContent=last?'QAR · '+D(P(last))+' · '+q(sum(lr,x=>x.orders))+' orders':'—';
+  // branch cards
+  const bc=BR.map((b,i)=>{const o={b,i,t:sum(rs.filter(x=>x.branch===b),x=>x.sales),n:sum(rs.filter(x=>x.branch===b),x=>x.orders)};APPS.forEach(a=>o[a]=sum(rs.filter(x=>x.branch===b&&x.app===a),x=>x.sales));return o});
+  const host=$('branches');host.replaceChildren();
+  bc.forEach(o=>{
+    const d=document.createElement('div');d.className='br';
+    const top=document.createElement('div');top.className='br-top';
+    const nm=document.createElement('span');nm.className='br-name';const sw=document.createElement('i');sw.style.background=COL[o.i];nm.append(sw,o.b);
+    const tt=document.createElement('span');tt.className='br-total';tt.textContent=q(o.t);
+    top.append(nm,tt);
+    const bar=document.createElement('div');bar.className='bar';
+    APPS.forEach((a,j)=>{const s=document.createElement('span');s.style.width=(o.t?o[a]/o.t*100:0)+'%';s.style.background=COL[j];s.style.opacity=.85;bar.append(s)});
+    const ap=document.createElement('div');ap.className='apps';
+    APPS.forEach(a=>{const c=document.createElement('span');const v=document.createElement('b');v.textContent=q(o[a]);c.append(v,a);ap.append(c)});
+    const sub=document.createElement('div');sub.className='sub';sub.textContent=q(o.n)+' orders · share '+(S?Math.round(o.t/S*100):0)+'% · bar shows app split';
+    d.append(top,bar,ap,sub);host.append(d);
+  });
+  // branch x app table
+  const tot={b:'Total',t:S,n:O};APPS.forEach(a=>tot[a]=sum(bc,x=>x[a]));
+  d3.select('#tba').selectAll('tr').data([...bc,tot]).join('tr').attr('class',d=>d.b==='Total'?'tot':null)
+    .selectAll('td').data(d=>[d.b,...APPS.map(a=>q(d[a])),q(d.t),q(d.n)]).join('td').attr('class',(d,i)=>i===5?'tc':null).text(d=>d);
+  d3.select('#legend').selectAll('span').data(BR).join('span').each(function(b,i){const s=d3.select(this);s.selectAll('*').remove();s.text('');s.append('i').style('background',COL[i]);s.append('span').text(b)});
+  drawChart();drawDaily();
+}
+function drawDaily(){
+  const rs=inMonth(),keys=view==='branch'?BR:APPS,f=view==='branch'?'branch':'app';
+  d3.select('#tdh').selectAll('tr').data([0]).join('tr').selectAll('th').data(['Date',...keys,'Total','Orders']).join('th').text(d=>d);
+  const dates=[...new Set(rs.map(x=>x.date))].sort().reverse();
+  const data=dates.map(dt=>{const day=rs.filter(x=>x.date===dt);return [D(P(dt)),...keys.map(k=>q(sum(day.filter(x=>x[f]===k),x=>x.sales))),q(sum(day,x=>x.sales)),q(sum(day,x=>x.orders))]});
+  d3.select('#tdd').selectAll('tr').data(data).join('tr').selectAll('td').data(d=>d).join('td').attr('class',(d,i)=>i===keys.length+1?'tc':null).text(d=>d);
+}
+function drawChart(){
+  const el=$('chart');el.replaceChildren();
+  const rs=inMonth();if(!rs.length)return;
+  const dates=[...new Set(rs.map(x=>x.date))].sort();
+  const daily=dates.map(dt=>{const o={date:dt};BR.forEach(b=>o[b]=sum(rs.filter(x=>x.date===dt&&x.branch===b),x=>x.sales));o.total=sum(rs.filter(x=>x.date===dt),x=>x.sales);o.orders=sum(rs.filter(x=>x.date===dt),x=>x.orders);return o});
+  const W=Math.max(260,el.clientWidth),H=260,m={t:10,r:6,b:26,l:40};
+  const x=d3.scaleBand().domain(dates).range([m.l,W-m.r]).padding(.2);
+  const y=d3.scaleLinear().domain([0,d3.max(daily,d=>d.total)||1]).nice().range([H-m.b,m.t]);
+  const svg=d3.select(el).append('svg').attr('width','100%').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','Daily sales by branch, stacked bars');
+  svg.append('g').attr('class','grid').attr('transform',`translate(${m.l},0)`).call(d3.axisLeft(y).ticks(4).tickSize(-(W-m.l-m.r)).tickFormat(d3.format('~s'))).call(a=>a.select('.domain').remove());
+  const ev=Math.ceil(dates.length/Math.max(1,Math.floor((W-m.l)/48)));
+  svg.append('g').attr('transform',`translate(0,${H-m.b})`).call(d3.axisBottom(x).tickSize(0).tickPadding(8).tickFormat((d,i)=>i%ev?'':d3.utcFormat('%-d')(P(d)))).call(a=>a.select('.domain').remove());
+  svg.append('g').selectAll('g').data(d3.stack().keys(BR)(daily)).join('g').style('fill',(s,i)=>COL[i])
+    .selectAll('rect').data(s=>s).join('rect').attr('x',d=>x(d.data.date)).attr('width',x.bandwidth()).attr('y',d=>y(d[1])).attr('height',d=>Math.max(0,y(d[0])-y(d[1])));
+  const tip=d3.select(el).append('div').attr('class','tip').style('display','none');
+  const show=(e,d)=>{tip.style('display',null).selectAll('*').remove();tip.append('b').text(D(P(d.date))+' · QAR '+q(d.total));BR.forEach(b=>tip.append('div').text(b+': '+q(d[b])));tip.append('div').text(q(d.orders)+' orders');const[px]=d3.pointer(e,el),tw=tip.node().offsetWidth;tip.style('left',Math.min(Math.max(0,px+10),el.clientWidth-tw)+'px').style('top','6px')};
+  svg.append('g').selectAll('rect').data(daily).join('rect').attr('x',d=>x(d.date)-x.step()*.1).attr('width',x.step()).attr('y',m.t).attr('height',H-m.b-m.t).style('fill','transparent')
+    .on('pointerenter pointermove pointerdown',show).on('pointerleave',()=>tip.style('display','none'));
+}
+</script>
+</body>
+</html>
