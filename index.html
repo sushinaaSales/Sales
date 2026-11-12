@@ -112,6 +112,12 @@ td.l{text-align:left}
 .lock .lerr{color:var(--brand-dark);font-size:.85rem;min-height:1.2em;margin:0}
 .lockbtn{font:500 .78rem var(--body);background:transparent;border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:8px;padding:6px 10px;min-height:34px;cursor:pointer}
 </style>
+<script>
+// Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
+(function(){var B='20261112171327';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+  if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
+    location.reload()}}).catch(function(){})})();
+</script>
 </head>
 <body>
 <div class="lock" id="cp" hidden><form id="cpf" autocomplete="on">
