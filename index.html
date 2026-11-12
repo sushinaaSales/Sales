@@ -99,12 +99,32 @@ td.l{text-align:left}
 .bars td.b{width:28%;min-width:60px}
 .bars td:first-child{min-width:150px;white-space:normal}
 .hbar{height:8px;border-radius:4px;background:var(--brand);opacity:.85}
+
+/* Lock screen: covers the page until the password unwraps the data key */
+.lock{position:fixed;inset:0;z-index:20;background:var(--brand);display:flex;align-items:center;justify-content:center;padding:24px 16px}
+.lock[hidden]{display:none}
+.lock form{background:#fff;border-radius:16px;box-shadow:0 8px 30px rgba(90,0,8,.3);padding:22px 18px;width:100%;max-width:340px;display:flex;flex-direction:column;gap:12px;align-items:stretch;text-align:center}
+.lock img{width:84px;height:84px;margin:0 auto;border-radius:16px}
+.lock h2{margin:0;font-size:1.2rem}
+.lock input[type=password]{font:500 1rem var(--body);padding:11px 12px;border:1px solid var(--line);border-radius:10px;min-height:46px}
+.lock label{font-size:.82rem;color:var(--muted);display:flex;gap:8px;align-items:center;justify-content:center}
+.lock button{font:600 1rem var(--body);background:var(--brand);color:#fff;border:0;border-radius:10px;min-height:46px;cursor:pointer}
+.lock .lerr{color:var(--brand-dark);font-size:.85rem;min-height:1.2em;margin:0}
+.lockbtn{font:500 .78rem var(--body);background:transparent;border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:8px;padding:6px 10px;min-height:34px;cursor:pointer}
 </style>
 </head>
 <body>
+<div class="lock" id="lock"><form id="lockf" autocomplete="on">
+  <img src="logo.png" alt="Sushinaa"><h2>Sushinaa Sales</h2>
+  <input type="text" name="username" value="sushinaa" autocomplete="username" hidden>
+  <input type="password" id="pw" autocomplete="current-password" placeholder="Password" aria-label="Password" required>
+  <label><input type="checkbox" id="remember" checked> Remember on this device</label>
+  <button type="submit" id="unlock">Unlock</button>
+  <p class="lerr" id="lerr" role="alert"></p>
+</form></div>
 <header class="band"><div class="in">
   <div class="brand"><img src="logo.png" alt="Sushinaa"><div><h1>Sushinaa Sales</h1><small>Delivery sales · all apps</small></div></div>
-  <label><span class="visually-hidden" style="position:absolute;left:-9999px">Month</span><select id="month" aria-label="Month"></select></label>
+  <div style="display:flex;gap:8px;align-items:center"><label><span class="visually-hidden" style="position:absolute;left:-9999px">Month</span><select id="month" aria-label="Month"></select></label><button type="button" class="lockbtn" id="lockbtn">Lock</button></div>
 </div></header>
 <main>
   <p class="asof" id="asof">Loading…</p>
@@ -220,8 +240,33 @@ let rows=[],cur=null,view='branch';
 const sum=(a,f)=>d3.sum(a,f);
 const inMonth=()=>rows.filter(r=>r.date.slice(0,7)===cur);
 
+// ---- Data is AES-GCM encrypted in enc/*.bin; the password unwraps the data key from key.json ----
+let DK=null;
+const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const store={get(){try{return localStorage.getItem('sk')}catch(e){return null}},set(v){try{localStorage.setItem('sk',v)}catch(e){}},del(){try{localStorage.removeItem('sk')}catch(e){}}};
+async function importDK(raw){return crypto.subtle.importKey('raw',raw,'AES-GCM',false,['decrypt'])}
+async function unwrap(pw){
+  const k=await fetch('key.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.json());
+  const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
+  const kek=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(k.salt),iterations:k.iter,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);
+  return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(k.iv)},kek,b64(k.key)));
+}
+async function getEnc(path){
+  const buf=new Uint8Array(await fetch(path+'?v='+Date.now(),{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('missing');return r.arrayBuffer()}));
+  return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},DK,buf.slice(12)));
+}
+const encCsv=path=>getEnc(path).then(t=>d3.csvParse(t));
+function showLock(msg){$('lock').hidden=false;$('lerr').textContent=msg||'';setTimeout(()=>{try{$('pw').focus()}catch(e){}},50)}
+$('lockf').onsubmit=async e=>{e.preventDefault();$('lerr').textContent='';$('unlock').disabled=true;$('unlock').textContent='Checking…';
+  try{const raw=await unwrap($('pw').value);DK=await importDK(raw);if($('remember').checked)store.set(btoa(String.fromCharCode(...raw)));$('lock').hidden=true;$('pw').value='';start()}
+  catch(err){showLock('Wrong password. Please try again.')}
+  $('unlock').disabled=false;$('unlock').textContent='Unlock'};
+$('lockbtn').onclick=()=>{store.del();location.hash='';location.reload()};
+(async()=>{const sk=store.get();if(sk){try{DK=await importDK(b64(sk));$('lock').hidden=true;start();return}catch(e){store.del()}}showLock()})();
+let started=false;
+function start(){if(started)return;started=true;
 Promise.all([
-  d3.csv('sales_daily.csv?v='+Date.now()),
+  encCsv('enc/sales_daily.bin'),
   fetch('updated.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null)
 ]).then(([r,u])=>{
   rows=r.map(x=>({date:x.date,branch:x.branch,app:x.app,orders:+x.orders,sales:+x.sales_qar}));
@@ -239,7 +284,8 @@ Promise.all([
   } else a.textContent='';
   render();showView();
   window.addEventListener('resize',()=>drawChart());
-}).catch(()=>{$('asof').textContent='Could not load the sales data. Pull down to refresh or try again in a minute.';$('asof').classList.add('err')});
+}).catch(()=>{if(DK&&store.get()){store.del();started=false;DK=null;showLock('Please type the password again.');return}$('asof').textContent='Could not load the sales data. Pull down to refresh or try again in a minute.';$('asof').classList.add('err')});
+}
 
 $('v-branch').onclick=()=>{view='branch';$('v-branch').setAttribute('aria-pressed','true');$('v-app').setAttribute('aria-pressed','false');drawDaily()};
 $('v-app').onclick=()=>{view='app';$('v-app').setAttribute('aria-pressed','true');$('v-branch').setAttribute('aria-pressed','false');drawDaily()};
@@ -306,7 +352,7 @@ function fill(id,first,opts){const el=$(id);if(el.options.length)return;el.repla
 ['o-branch','c-branch','i-branch'].forEach(id=>fill(id,'All branches',BR));['o-app','i-app'].forEach(id=>fill(id,'All apps',APPS));
 function loadOrders(m){
   if(OC[m])return OC[m];
-  OC[m]=d3.csv('data/orders-'+m+'.csv?v='+Date.now()).then(r=>r.map(x=>({...x,sales:+x.sales_qar,date:x.time.slice(0,10)}))).catch(()=>null);
+  OC[m]=encCsv('enc/orders-'+m+'.bin').then(r=>r.map(x=>({...x,sales:+x.sales_qar,date:x.time.slice(0,10)}))).catch(()=>null);
   return OC[m];
 }
 function td(tr,v,c){const e=document.createElement('td');e.textContent=v;if(c)e.className=c;tr.append(e);return e}
@@ -315,6 +361,7 @@ const TF=t=>{const d=P(t.slice(0,10));return d3.utcFormat('%-d %b')(d)+' '+t.sli
 let oLimit=100,iLimit=40;
 function curView(){return (location.hash||'#sales').slice(1)}
 async function showView(){
+  if(!started||!cur)return;
   const v=['sales','orders','cancelled','items','payouts'].includes(curView())?curView():'sales';
   document.querySelectorAll('.view').forEach(e=>e.hidden=e.id!=='view-'+v);
   document.querySelectorAll('.tabs a').forEach(a=>a.dataset.v===v?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
