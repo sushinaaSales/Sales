@@ -78,12 +78,13 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--c2);outline-of
 .err{color:var(--warn);font-weight:600}
 
 /* Bottom tab bar: four views, thumb-reachable on phones */
-.tabs{position:fixed;left:0;right:0;bottom:0;z-index:5;background:#fff;box-shadow:0 -2px 12px rgba(90,0,8,.18);display:grid;grid-template-columns:repeat(4,1fr);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:5;background:#fff;box-shadow:0 -2px 12px rgba(90,0,8,.18);display:grid;grid-template-columns:repeat(5,1fr);padding-bottom:env(safe-area-inset-bottom,0px)}
 .tabs a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px 7px;font:500 .7rem var(--body);color:var(--muted);text-decoration:none;min-height:54px}
 .tabs a svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .tabs a[aria-current=page]{color:var(--brand)}
 .tabs a[aria-current=page] svg{stroke-width:2.2}
 main{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+.view{display:flex;flex-direction:column;gap:16px}
 .view[hidden]{display:none}
 .filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
 .filters select,.filters input{font:500 .85rem var(--body);padding:7px 10px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--fg);min-height:38px}
@@ -178,12 +179,28 @@ td.l{text-align:left}
       <p class="note">Quantities from orders that were not cancelled. The apps do not export a price per item, so this shows how many were sold, not their value. Rafeeq's export has no item list, so Rafeeq orders are not included here. Keeta lists each item once per order.</p>
     </section>
   </div>
+  <div class="view" id="view-payouts" hidden>
+    <section class="tiles">
+      <div class="tile"><span class="lbl">Food sales</span><span class="big" id="p1">—</span><span class="sub">QAR, not cancelled</span></div>
+      <div class="tile"><span class="lbl">Charges</span><span class="big" id="p2">—</span><span class="sub" id="p2s">QAR</span></div>
+      <div class="tile"><span class="lbl">Net payout</span><span class="big" id="p3">—</span><span class="sub" id="p3s">QAR</span></div>
+      <div class="tile"><span class="lbl">Commission</span><span class="big" id="p4">—</span><span class="sub" id="p4s">QAR</span></div>
+    </section>
+    <section class="card">
+      <h2>Charges and payout (QAR)</h2>
+      <div class="seg" role="group" aria-label="Group by"><button type="button" id="p-app" aria-pressed="true">By app</button><button type="button" id="p-br" aria-pressed="false">By branch</button></div>
+      <div class="filters"><select id="p-filter" aria-label="Filter"></select></div>
+      <div class="wrap"><table><thead><tr><th id="p-h">App</th><th>Food sales</th><th>Commission</th><th>Payment fee</th><th>Marketing</th><th>Discounts</th><th>Other</th><th>Total charges</th><th>Net payout</th><th>Kept</th></tr></thead><tbody id="p-body"></tbody></table></div>
+      <p class="note"><b>Talabat and Keeta</b> are exact, from each order in their exports. Talabat marketing is the Pro delivery (loyalty) charge plus ads. Keeta discounts are promotions you fund. <b>Snoonu and Rafeeq are estimates</b> (marked est.) from their statement rates: 19% commission plus 2.5% (Snoonu) or about 2.6% (Rafeeq) on card and wallet payments. Their statements, which come every half month, can also include ranking fees, rebates and refunds that are not shown here. "Other" is the app's own small adjustments.</p>
+    </section>
+  </div>
   <p class="foot">Food sales before app commission, without delivery fees or cancelled orders, from Snoonu, Talabat, Keeta and Rafeeq. Updated every hour. Dates are when the order was placed (Qatar time); the latest day is still in progress.</p>
 </main>
 <nav class="tabs" aria-label="Sections">
   <a href="#sales" data-v="sales"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Sales</a>
   <a href="#orders" data-v="orders"><svg viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>Orders</a>
   <a href="#cancelled" data-v="cancelled"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>Cancelled</a>
+  <a href="#payouts" data-v="payouts"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 15h2"/></svg>Payouts</a>
   <a href="#items" data-v="items"><svg viewBox="0 0 24 24"><path d="M3 11h18M5 11a7 7 0 0 0 14 0M9 7c0-2 1.5-3 3-3s3 1 3 3M12 4V2"/></svg>Items</a>
 </nav>
 <script>
@@ -289,16 +306,16 @@ const TF=t=>{const d=P(t.slice(0,10));return d3.utcFormat('%-d %b')(d)+' '+t.sli
 let oLimit=100,iLimit=40;
 function curView(){return (location.hash||'#sales').slice(1)}
 async function showView(){
-  const v=['sales','orders','cancelled','items'].includes(curView())?curView():'sales';
+  const v=['sales','orders','cancelled','items','payouts'].includes(curView())?curView():'sales';
   document.querySelectorAll('.view').forEach(e=>e.hidden=e.id!=='view-'+v);
   document.querySelectorAll('.tabs a').forEach(a=>a.dataset.v===v?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
   if(v==='sales'){drawChart();return}
   const os=await loadOrders(cur);
   const msg=v==='orders'?'o-count':v==='items'?'i-count':null;
   if(!os){if(msg)$(msg).textContent='Order details are not available for this month yet.';
-    if(v==='orders')$('o-body').replaceChildren();if(v==='items')$('i-body').replaceChildren();if(v==='cancelled'){['c-br','c-rs','c-list'].forEach(i=>$(i).replaceChildren());['c1','c2','c3','c4'].forEach(i=>$(i).textContent='—');$('c4s').textContent='No order details for this month'}
+    if(v==='orders')$('o-body').replaceChildren();if(v==='items')$('i-body').replaceChildren();if(v==='payouts'){$('p-body').replaceChildren();['p1','p2','p3','p4'].forEach(i=>$(i).textContent='—')}if(v==='cancelled'){['c-br','c-rs','c-list'].forEach(i=>$(i).replaceChildren());['c1','c2','c3','c4'].forEach(i=>$(i).textContent='—');$('c4s').textContent='No order details for this month'}
     return}
-  if(v==='orders')drawOrders(os);if(v==='cancelled')drawCancelled(os);if(v==='items')drawItems(os);
+  if(v==='payouts')drawPayouts(os);if(v==='orders')drawOrders(os);if(v==='cancelled')drawCancelled(os);if(v==='items')drawItems(os);
 }
 function drawOrders(os){
   const b=$('o-branch').value,a=$('o-app').value,st=$('o-status').value,qq=$('o-q').value.trim().toLowerCase();
@@ -339,6 +356,26 @@ function drawItems(os){
 $('o-q').oninput=()=>{oLimit=100;showView()};$('o-more').onclick=()=>{oLimit+=200;showView()};
 $('c-branch').onchange=()=>showView();
 ['i-branch','i-app'].forEach(id=>$(id).onchange=()=>{iLimit=40;showView()});$('i-q').oninput=()=>showView();$('i-more').onclick=()=>{iLimit=1e6;showView()};
+let pBy='app';
+const CK=['commission','payment_fee','marketing','discounts','other'];
+function drawPayouts(os){
+  const keys=pBy==='app'?APPS:BR,fk=pBy==='app'?'app':'branch',ok=pBy==='app'?'branch':'app';
+  const fl=$('p-filter');const want=pBy==='app'?'All branches':'All apps';
+  if(fl.dataset.by!==pBy){fl.dataset.by=pBy;fl.replaceChildren(new Option(want,''),...(pBy==='app'?BR:APPS).map(o=>new Option(o,o)))}
+  const xs=os.filter(o=>!fl.value||o[ok]===fl.value);
+  const agg=a=>{const r={g:sum(a,o=>o.status!=='Cancelled'?o.sales:0),net:sum(a,o=>+o.net),est:a.some(o=>o.est==='1')};CK.forEach(k=>r[k]=sum(a,o=>+o[k]));r.ch=d3.sum(CK,k=>r[k]);return r};
+  const T=agg(xs);
+  $('p1').textContent=q(T.g);$('p2').textContent=q(T.ch);$('p2s').textContent='QAR · '+(T.g?d3.format('.1%')(T.ch/T.g):'—')+' of sales';
+  $('p3').textContent=q(T.net);$('p3s').textContent='QAR · you keep '+(T.g?d3.format('.1%')(T.net/T.g):'—');
+  $('p4').textContent=q(T.commission);$('p4s').textContent='QAR · '+(T.g?d3.format('.1%')(T.commission/T.g):'—')+' of sales';
+  $('p-h').textContent=pBy==='app'?'App':'Branch';
+  const rs=[...keys.map(k=>({k,...agg(xs.filter(o=>o[fk]===k))})),{k:'Total',...T}];
+  $('p-body').replaceChildren(...rs.map(r=>{const tr=document.createElement('tr');if(r.k==='Total')tr.className='tot';
+    td(tr,r.k+(r.k!=='Total'&&pBy==='app'&&r.est?' (est.)':''));td(tr,q(r.g));CK.forEach(k=>td(tr,q(r[k])));td(tr,q(r.ch));td(tr,q(r.net),'tc');td(tr,r.g?d3.format('.0%')(r.net/r.g):'—');return tr}));
+}
+$('p-app').onclick=()=>{pBy='app';$('p-app').setAttribute('aria-pressed','true');$('p-br').setAttribute('aria-pressed','false');showView()};
+$('p-br').onclick=()=>{pBy='branch';$('p-br').setAttribute('aria-pressed','true');$('p-app').setAttribute('aria-pressed','false');showView()};
+$('p-filter').onchange=()=>showView();
 window.addEventListener('hashchange',()=>{showView();window.scrollTo(0,0)});
 </script>
 </body>
