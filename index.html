@@ -86,10 +86,10 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--c2);outline-of
 <main>
   <p class="asof" id="asof">Loading…</p>
   <section class="tiles">
-    <div class="tile"><span class="lbl">Sales</span><span class="big" id="k1">—</span><span class="sub">QAR this month</span></div>
+    <div class="tile"><span class="lbl">Sales</span><span class="big" id="k1">—</span><span class="sub">QAR in this month</span></div>
     <div class="tile"><span class="lbl">Orders</span><span class="big" id="k2">—</span><span class="sub">not cancelled</span></div>
     <div class="tile"><span class="lbl">Average order</span><span class="big" id="k3">—</span><span class="sub">QAR</span></div>
-    <div class="tile"><span class="lbl">Latest day</span><span class="big" id="k4">—</span><span class="sub" id="k4s">—</span></div>
+    <div class="tile"><span class="lbl">Last day</span><span class="big" id="k4">—</span><span class="sub" id="k4s">—</span></div>
   </section>
   <section class="card">
     <h2>Branches</h2>
@@ -169,7 +169,7 @@ function render(){
   const tot={b:'Total',t:S,n:O};APPS.forEach(a=>tot[a]=sum(bc,x=>x[a]));
   d3.select('#tba').selectAll('tr').data([...bc,tot]).join('tr').attr('class',d=>d.b==='Total'?'tot':null)
     .selectAll('td').data(d=>[d.b,...APPS.map(a=>q(d[a])),q(d.t),q(d.n)]).join('td').attr('class',(d,i)=>i===5?'tc':null).text(d=>d);
-  d3.select('#legend').selectAll('span').data(BR).join('span').each(function(b,i){const s=d3.select(this);s.selectAll('*').remove();s.text('');s.append('i').style('background',COL[i]);s.append('span').text(b)});
+  $('legend').replaceChildren(...BR.map((b,i)=>{const s=document.createElement('span'),sw=document.createElement('i');sw.style.background=COL[i];s.append(sw,b);return s}));
   drawChart();drawDaily();
 }
 function drawDaily(){
