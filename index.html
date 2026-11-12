@@ -76,6 +76,28 @@ td.tc{font-weight:600}
 button:focus-visible,select:focus-visible{outline:2px solid var(--c2);outline-offset:2px}
 .foot{font-size:.76rem;color:var(--on-brand-muted);margin:0}
 .err{color:var(--warn);font-weight:600}
+
+/* Bottom tab bar: four views, thumb-reachable on phones */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:5;background:#fff;box-shadow:0 -2px 12px rgba(90,0,8,.18);display:grid;grid-template-columns:repeat(4,1fr);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px 7px;font:500 .7rem var(--body);color:var(--muted);text-decoration:none;min-height:54px}
+.tabs a svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tabs a[aria-current=page]{color:var(--brand)}
+.tabs a[aria-current=page] svg{stroke-width:2.2}
+main{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+.view[hidden]{display:none}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.filters select,.filters input{font:500 .85rem var(--body);padding:7px 10px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--fg);min-height:38px}
+.filters input{flex:1 1 180px;min-width:0}
+.count{font-size:.8rem;color:var(--muted);margin:0 0 6px}
+td.it{white-space:normal;text-align:left;min-width:220px;max-width:420px;color:var(--muted);font-size:.8rem}
+td.l{text-align:left}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.72rem;font-weight:600}
+.pill.ok{background:#e3f4ee;color:#0d6b57}.pill.x{background:#fde4e5;color:#a8161e}.pill.p{background:#e8effc;color:#24529f}
+.more{font:600 .85rem var(--body);border:1px solid var(--line);background:#fff;color:var(--brand);border-radius:9px;padding:9px 14px;min-height:40px;margin-top:10px;cursor:pointer}
+.note{font-size:.76rem;color:var(--muted);margin:8px 0 0}
+.bars td.b{width:28%;min-width:60px}
+.bars td:first-child{min-width:150px;white-space:normal}
+.hbar{height:8px;border-radius:4px;background:var(--brand);opacity:.85}
 </style>
 </head>
 <body>
@@ -85,6 +107,7 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--c2);outline-of
 </div></header>
 <main>
   <p class="asof" id="asof">Loading…</p>
+  <div class="view" id="view-sales">
   <section class="tiles">
     <div class="tile"><span class="lbl">Sales</span><span class="big" id="k1">—</span><span class="sub">QAR in this month</span></div>
     <div class="tile"><span class="lbl">Orders</span><span class="big" id="k2">—</span><span class="sub">not cancelled</span></div>
@@ -109,8 +132,60 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--c2);outline-of
     <div class="seg" role="group" aria-label="Table view"><button type="button" id="v-branch" aria-pressed="true">By branch</button><button type="button" id="v-app" aria-pressed="false">By app</button></div>
     <div class="wrap"><table><thead id="tdh"></thead><tbody id="tdd"></tbody></table></div>
   </section>
+  </div>
+  <div class="view" id="view-orders" hidden>
+    <section class="card">
+      <h2>Order history</h2>
+      <div class="filters">
+        <select id="o-branch" aria-label="Branch"></select><select id="o-app" aria-label="App"></select>
+        <select id="o-status" aria-label="Status"><option value="">All statuses</option><option>Completed</option><option>In progress</option><option>Cancelled</option></select>
+        <input id="o-q" type="search" placeholder="Search order ID or item" aria-label="Search order ID or item">
+      </div>
+      <p class="count" id="o-count"></p>
+      <div class="wrap"><table><thead><tr><th>Time</th><th>Branch</th><th>App</th><th>Order ID</th><th>Status</th><th>QAR</th><th style="text-align:left">Items</th></tr></thead><tbody id="o-body"></tbody></table></div>
+      <button type="button" class="more" id="o-more" hidden>Show more</button>
+    </section>
+  </div>
+  <div class="view" id="view-cancelled" hidden>
+    <section class="tiles">
+      <div class="tile"><span class="lbl">Cancelled</span><span class="big" id="c1">—</span><span class="sub">orders</span></div>
+      <div class="tile"><span class="lbl">Value lost</span><span class="big" id="c2">—</span><span class="sub">QAR food value</span></div>
+      <div class="tile"><span class="lbl">Cancel rate</span><span class="big" id="c3">—</span><span class="sub">of all orders</span></div>
+      <div class="tile"><span class="lbl">Top reason</span><span class="big" id="c4" style="font-size:1rem">—</span><span class="sub" id="c4s">—</span></div>
+    </section>
+    <section class="card">
+      <h2>Cancelled by branch</h2>
+      <div class="wrap"><table><thead><tr><th>Branch</th><th>Snoonu</th><th>Talabat</th><th>Keeta</th><th>Rafeeq</th><th>Total</th><th>Rate</th><th>QAR lost</th></tr></thead><tbody id="c-br"></tbody></table></div>
+    </section>
+    <section class="card">
+      <h2>Reasons</h2>
+      <div class="filters"><select id="c-branch" aria-label="Branch"></select></div>
+      <div class="wrap"><table class="bars"><thead><tr><th>Reason</th><th>Orders</th><th></th></tr></thead><tbody id="c-rs"></tbody></table></div>
+      <p class="note">Talabat and Keeta give the reason. Snoonu only says who cancelled (customer or restaurant). Rafeeq marks some orders as "Bad order" and gives no other reason.</p>
+    </section>
+    <section class="card">
+      <h2>Cancelled orders</h2>
+      <div class="wrap"><table><thead><tr><th>Time</th><th>Branch</th><th>App</th><th>Order ID</th><th>Cancelled by</th><th style="text-align:left">Reason</th><th>QAR</th><th style="text-align:left">Items</th></tr></thead><tbody id="c-list"></tbody></table></div>
+    </section>
+  </div>
+  <div class="view" id="view-items" hidden>
+    <section class="card">
+      <h2>Item sales</h2>
+      <div class="filters"><select id="i-branch" aria-label="Branch"></select><select id="i-app" aria-label="App"></select><input id="i-q" type="search" placeholder="Search item" aria-label="Search item"></div>
+      <p class="count" id="i-count"></p>
+      <div class="wrap"><table class="bars"><thead><tr><th>Item</th><th>Qty sold</th><th>Orders</th><th></th></tr></thead><tbody id="i-body"></tbody></table></div>
+      <button type="button" class="more" id="i-more" hidden>Show all items</button>
+      <p class="note">Quantities from orders that were not cancelled. The apps do not export a price per item, so this shows how many were sold, not their value. Rafeeq's export has no item list, so Rafeeq orders are not included here. Keeta lists each item once per order.</p>
+    </section>
+  </div>
   <p class="foot">Food sales before app commission, without delivery fees or cancelled orders, from Snoonu, Talabat, Keeta and Rafeeq. Updated every hour. Dates are when the order was placed (Qatar time); the latest day is still in progress.</p>
 </main>
+<nav class="tabs" aria-label="Sections">
+  <a href="#sales" data-v="sales"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Sales</a>
+  <a href="#orders" data-v="orders"><svg viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>Orders</a>
+  <a href="#cancelled" data-v="cancelled"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>Cancelled</a>
+  <a href="#items" data-v="items"><svg viewBox="0 0 24 24"><path d="M3 11h18M5 11a7 7 0 0 0 14 0M9 7c0-2 1.5-3 3-3s3 1 3 3M12 4V2"/></svg>Items</a>
+</nav>
 <script>
 const BR=['Downtown','Al Thumama','West Bay','Al Khor'],APPS=['Snoonu','Talabat','Keeta','Rafeeq'],COL=['var(--c1)','var(--c2)','var(--c3)','var(--c4)'];
 const q=d3.format(',.0f'),q2=d3.format(',.2f'),P=d3.utcParse('%Y-%m-%d'),D=d3.utcFormat('%a %-d %b'),M=d3.utcFormat('%B %Y');
@@ -129,14 +204,14 @@ Promise.all([
   const sel=$('month');
   sel.replaceChildren(...months.map(m=>new Option(M(P(m+'-01')),m)));
   sel.value=cur;
-  sel.onchange=()=>{cur=sel.value;render()};
+  sel.onchange=()=>{cur=sel.value;render();showView()};
   const a=$('asof');
   if(u&&u.at){
     const t=new Date(u.at),h=(Date.now()-t)/36e5;
     a.textContent='Updated '+t.toLocaleString('en-GB',{timeZone:'Asia/Qatar',weekday:'short',day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})+' (Qatar time)'+(h>3?' · more than 3 hours ago':'');
     if(h>3)a.classList.add('stale');
   } else a.textContent='';
-  render();
+  render();showView();
   window.addEventListener('resize',()=>drawChart());
 }).catch(()=>{$('asof').textContent='Could not load the sales data. Pull down to refresh or try again in a minute.';$('asof').classList.add('err')});
 
@@ -198,6 +273,73 @@ function drawChart(){
   svg.append('g').selectAll('rect').data(daily).join('rect').attr('x',d=>x(d.date)-x.step()*.1).attr('width',x.step()).attr('y',m.t).attr('height',H-m.b-m.t).style('fill','transparent')
     .on('pointerenter pointermove pointerdown',show).on('pointerleave',()=>tip.style('display','none'));
 }
+
+// ---- Orders / Cancelled / Items views (order-level files, loaded per month on demand) ----
+const OC={};let OI=null;
+function fill(id,first,opts){const el=$(id);if(el.options.length)return;el.replaceChildren(new Option(first,''),...opts.map(o=>new Option(o,o)))}
+['o-branch','c-branch','i-branch'].forEach(id=>fill(id,'All branches',BR));['o-app','i-app'].forEach(id=>fill(id,'All apps',APPS));
+function loadOrders(m){
+  if(OC[m])return OC[m];
+  OC[m]=d3.csv('data/orders-'+m+'.csv?v='+Date.now()).then(r=>r.map(x=>({...x,sales:+x.sales_qar,date:x.time.slice(0,10)}))).catch(()=>null);
+  return OC[m];
+}
+function td(tr,v,c){const e=document.createElement('td');e.textContent=v;if(c)e.className=c;tr.append(e);return e}
+function pill(tr,s){const e=td(tr,'');const p=document.createElement('span');p.className='pill '+(s==='Completed'?'ok':s==='Cancelled'?'x':'p');p.textContent=s;e.append(p)}
+const TF=t=>{const d=P(t.slice(0,10));return d3.utcFormat('%-d %b')(d)+' '+t.slice(11)};
+let oLimit=100,iLimit=40;
+function curView(){return (location.hash||'#sales').slice(1)}
+async function showView(){
+  const v=['sales','orders','cancelled','items'].includes(curView())?curView():'sales';
+  document.querySelectorAll('.view').forEach(e=>e.hidden=e.id!=='view-'+v);
+  document.querySelectorAll('.tabs a').forEach(a=>a.dataset.v===v?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
+  if(v==='sales'){drawChart();return}
+  const os=await loadOrders(cur);
+  const msg=v==='orders'?'o-count':v==='items'?'i-count':null;
+  if(!os){if(msg)$(msg).textContent='Order details are not available for this month yet.';
+    if(v==='orders')$('o-body').replaceChildren();if(v==='items')$('i-body').replaceChildren();if(v==='cancelled'){['c-br','c-rs','c-list'].forEach(i=>$(i).replaceChildren());['c1','c2','c3','c4'].forEach(i=>$(i).textContent='—');$('c4s').textContent='No order details for this month'}
+    return}
+  if(v==='orders')drawOrders(os);if(v==='cancelled')drawCancelled(os);if(v==='items')drawItems(os);
+}
+function drawOrders(os){
+  const b=$('o-branch').value,a=$('o-app').value,st=$('o-status').value,qq=$('o-q').value.trim().toLowerCase();
+  const f=os.filter(o=>(!b||o.branch===b)&&(!a||o.app===a)&&(!st||o.status===st)&&(!qq||o.order_id.includes(qq)||o.items.toLowerCase().includes(qq)));
+  $('o-count').textContent=q(f.length)+' orders · QAR '+q(sum(f.filter(o=>o.status!=='Cancelled'),o=>o.sales))+' not cancelled';
+  $('o-body').replaceChildren(...f.slice(0,oLimit).map(o=>{const tr=document.createElement('tr');td(tr,TF(o.time));td(tr,o.branch,'l');td(tr,o.app,'l');td(tr,o.order_id,'l');pill(tr,o.status);td(tr,q2(o.sales));td(tr,o.items||'—','it');return tr}));
+  $('o-more').hidden=f.length<=oLimit;
+}
+function drawCancelled(os){
+  const cx=os.filter(o=>o.status==='Cancelled'),n=cx.length;
+  $('c1').textContent=q(n);$('c2').textContent=q(sum(cx,o=>o.sales));$('c3').textContent=os.length?d3.format('.1%')(n/os.length):'—';
+  const rk=o=>o.reason||(o.cancelled_by?'Cancelled by '+o.cancelled_by.toLowerCase()+' (no reason given)':'No reason given');
+  const all=d3.rollups(cx,v=>v.length,rk).sort((x,y)=>y[1]-x[1]);
+  $('c4').textContent=all.length?all[0][0]:'None';$('c4s').textContent=all.length?q(all[0][1])+' orders':'—';
+  const rows_=[...BR.map(b=>({b,f:cx.filter(o=>o.branch===b),t:os.filter(o=>o.branch===b).length})),{b:'Total',f:cx,t:os.length}];
+  $('c-br').replaceChildren(...rows_.map(r=>{const tr=document.createElement('tr');if(r.b==='Total')tr.className='tot';td(tr,r.b);APPS.forEach(a=>td(tr,q(r.f.filter(o=>o.app===a).length)));td(tr,q(r.f.length),'tc');td(tr,r.t?d3.format('.1%')(r.f.length/r.t):'—');td(tr,q(sum(r.f,o=>o.sales)));return tr}));
+  const cb=$('c-branch').value,rs=d3.rollups(cx.filter(o=>!cb||o.branch===cb),v=>v.length,rk).sort((x,y)=>y[1]-x[1]),mx=d3.max(rs,r=>r[1])||1;
+  $('c-rs').replaceChildren(...(rs.length?rs:[['No cancelled orders',0]]).map(([r,c])=>{const tr=document.createElement('tr');td(tr,r).style.whiteSpace='normal';td(tr,q(c));const e=td(tr,'','b');const h=document.createElement('div');h.className='hbar';h.style.width=(c/mx*100)+'%';e.append(h);return tr}));
+  $('c-list').replaceChildren(...cx.filter(o=>!cb||o.branch===cb).map(o=>{const tr=document.createElement('tr');td(tr,TF(o.time));td(tr,o.branch,'l');td(tr,o.app,'l');td(tr,o.order_id,'l');td(tr,o.cancelled_by||'—','l');td(tr,o.reason||'—','it');td(tr,q2(o.sales));td(tr,o.items||'—','it');return tr}));
+}
+const ikey=s=>s.toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+function drawItems(os){
+  const b=$('i-branch').value,a=$('i-app').value,qq=$('i-q').value.trim().toLowerCase();
+  const m=new Map();
+  os.filter(o=>o.status!=='Cancelled'&&o.items&&(!b||o.branch===b)&&(!a||o.app===a)).forEach(o=>{
+    const seen=new Set();
+    o.items.split('; ').forEach(x=>{const k=x.indexOf(' x ');if(k<0)return;const qn=+x.slice(0,k)||1,name=x.slice(k+3),key=ikey(name);if(!key)return;
+      let e=m.get(key);if(!e){e={names:new Map(),qty:0,orders:0};m.set(key,e)}e.qty+=qn;e.names.set(name,(e.names.get(name)||0)+qn);if(!seen.has(key)){e.orders++;seen.add(key)}});
+  });
+  let arr=[...m.values()].map(e=>({name:[...e.names].sort((x,y)=>y[1]-x[1])[0][0],qty:e.qty,orders:e.orders})).sort((x,y)=>y.qty-x.qty);
+  if(qq)arr=arr.filter(e=>e.name.toLowerCase().includes(qq));
+  const mx=d3.max(arr,e=>e.qty)||1;
+  $('i-count').textContent=q(arr.length)+' items · '+q(sum(arr,e=>e.qty))+' sold';
+  $('i-body').replaceChildren(...arr.slice(0,iLimit).map(e=>{const tr=document.createElement('tr');td(tr,e.name).style.whiteSpace='normal';td(tr,q(e.qty),'tc');td(tr,q(e.orders));const c=td(tr,'','b');const h=document.createElement('div');h.className='hbar';h.style.width=(e.qty/mx*100)+'%';c.append(h);return tr}));
+  $('i-more').hidden=arr.length<=iLimit;
+}
+['o-branch','o-app','o-status'].forEach(id=>$(id).onchange=()=>{oLimit=100;showView()});
+$('o-q').oninput=()=>{oLimit=100;showView()};$('o-more').onclick=()=>{oLimit+=200;showView()};
+$('c-branch').onchange=()=>showView();
+['i-branch','i-app'].forEach(id=>$(id).onchange=()=>{iLimit=40;showView()});$('i-q').oninput=()=>showView();$('i-more').onclick=()=>{iLimit=1e6;showView()};
+window.addEventListener('hashchange',()=>{showView();window.scrollTo(0,0)});
 </script>
 </body>
 </html>
