@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Sushinaa Sales</title>
 <meta name="robots" content="noindex,nofollow">
-<meta name="theme-color" content="#b3122e">
+<meta name="theme-color" content="#d52029">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Sushinaa Sales">
@@ -17,34 +17,33 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <style>
-/* Layout: phone-first single column; brand band on top, tiles 2-up, tables swipe sideways */
-:root{--brand:#b3122e;--bg:#f5f6f8;--panel:#ffffff;--fg:#191c22;--muted:#5f6775;--line:#e2e5eb;
---c1:#b3122e;--c2:#2f6fde;--c3:#15967c;--c4:#d99a00;--warn:#b54708;
+/* Layout: phone-first single column on the Sushinaa brand red; white cards carry the numbers */
+:root{--brand:#d52029;--brand-dark:#a8161e;--bg:#d52029;--panel:#ffffff;--fg:#1d1416;--muted:#6b5f61;--line:#efe3e4;
+--on-brand:#ffffff;--on-brand-muted:rgba(255,255,255,.82);
+--c1:#d52029;--c2:#2f6fde;--c3:#15967c;--c4:#e0a100;--warn:#fff3c4;
 --display:"Space Grotesk",system-ui,sans-serif;--body:Inter,system-ui,-apple-system,sans-serif;color-scheme:light}
-@media (prefers-color-scheme:dark){:root{--bg:#111318;--panel:#1a1d24;--fg:#eceef2;--muted:#9ba3b1;--line:#2a2f39;
---c1:#ec4a64;--c2:#6195f2;--c3:#2fc7a5;--c4:#f2bb2c;--warn:#f79009;color-scheme:dark}}
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--body);-webkit-text-size-adjust:100%}
-.band{background:var(--brand);color:#fff;padding-top:env(safe-area-inset-top,0px)}
+.band{background:var(--brand);color:var(--on-brand);padding-top:env(safe-area-inset-top,0px);border-bottom:1px solid rgba(255,255,255,.18)}
 .band .in{max-width:1100px;margin:0 auto;padding:18px max(16px,env(safe-area-inset-right,0px)) 18px max(16px,env(safe-area-inset-left,0px));display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
 .brand{display:flex;align-items:center;gap:10px}
-.brand img{width:36px;height:36px;border-radius:9px}
-h1{font:700 1.35rem/1.1 var(--display);margin:0;letter-spacing:.01em}
+.brand img{width:64px;height:64px;border-radius:14px;background:var(--brand)}
+h1{font:700 1.5rem/1.1 var(--display);margin:0;letter-spacing:.01em}
 .band small{display:block;font-size:.78rem;opacity:.85}
-select{font:500 .95rem var(--body);padding:8px 12px;border-radius:9px;border:0;background:rgba(255,255,255,.18);color:#fff;min-height:40px}
+select{font:600 .95rem var(--body);padding:8px 12px;border-radius:9px;border:0;background:#fff;color:var(--brand);min-height:40px}
 select option{color:#000}
 main{max-width:1100px;margin:0 auto;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(32px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:16px}
-.asof{font-size:.82rem;color:var(--muted);margin:0}
+.asof{font-size:.82rem;color:var(--on-brand-muted);margin:0}
 .asof.stale{color:var(--warn);font-weight:600}
 .tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 @media (min-width:760px){.tiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
-.tile{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tile{background:var(--panel);border:0;border-radius:14px;box-shadow:0 2px 10px rgba(90,0,8,.18);padding:14px;display:flex;flex-direction:column;gap:2px;min-width:0}
 .lbl{font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
 .big{font:600 1.55rem/1.15 var(--display);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 @media (min-width:760px){.big{font-size:1.9rem}}
 .sub{font-size:.76rem;color:var(--muted)}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;min-width:0}
+.card{background:var(--panel);border:0;border-radius:14px;box-shadow:0 2px 10px rgba(90,0,8,.18);padding:14px;min-width:0}
 h2{font:600 1rem var(--display);margin:0 0 10px}
 .branches{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
 @media (min-width:760px){.branches{grid-template-columns:repeat(4,minmax(0,1fr))}}
@@ -75,13 +74,13 @@ td.tc{font-weight:600}
 .seg button{font:500 .8rem var(--body);border:0;background:transparent;color:var(--muted);padding:7px 12px;min-height:36px;cursor:pointer}
 .seg button[aria-pressed=true]{background:var(--brand);color:#fff}
 button:focus-visible,select:focus-visible{outline:2px solid var(--c2);outline-offset:2px}
-.foot{font-size:.76rem;color:var(--muted);margin:0}
-.err{color:var(--warn)}
+.foot{font-size:.76rem;color:var(--on-brand-muted);margin:0}
+.err{color:var(--warn);font-weight:600}
 </style>
 </head>
 <body>
 <header class="band"><div class="in">
-  <div class="brand"><img src="icon-192.png" alt=""><div><h1>Sushinaa Sales</h1><small>All delivery apps</small></div></div>
+  <div class="brand"><img src="logo.png" alt="Sushinaa"><div><h1>Sushinaa Sales</h1><small>Delivery sales · all apps</small></div></div>
   <label><span class="visually-hidden" style="position:absolute;left:-9999px">Month</span><select id="month" aria-label="Month"></select></label>
 </div></header>
 <main>
