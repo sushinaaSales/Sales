@@ -124,7 +124,7 @@ td.l{text-align:left}
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='20261113072529';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='20261113073202';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
@@ -132,8 +132,8 @@ td.l{text-align:left}
 <body>
 <div id="mt" hidden><div class="box">
   <img src="logo.png" alt="Sushinaa" id="mt-logo">
-  <h2>Under update</h2>
-  <p>The sales report is being updated. Please check again later.</p>
+  <h2>Temporarily unavailable</h2>
+  <p>Please check back later.</p>
   <form id="mt-own" hidden style="display:flex;flex-direction:column;gap:8px">
     <input type="password" id="mt-code" placeholder="Owner code" aria-label="Owner code" autocomplete="off">
     <button type="submit">Open</button>
@@ -181,7 +181,7 @@ td.l{text-align:left}
 </form></div>
 <header class="band"><div class="in">
   <div class="brand"><img src="logo.png" alt="Sushinaa"><div><h1>Sushinaa Sales</h1><small>Delivery sales · all apps</small></div></div>
-  <div style="display:flex;gap:8px;align-items:center"><span id="mtbadge" hidden title="Others see Under update">Paused for others</span><label><span class="visually-hidden" style="position:absolute;left:-9999px">Month</span><select id="month" aria-label="Month"></select></label><button type="button" class="lockbtn" id="cpbtn">Password</button><button type="button" class="lockbtn" id="lockbtn">Lock</button></div>
+  <div style="display:flex;gap:8px;align-items:center"><span id="mtbadge" hidden title="Others see Temporarily unavailable">Paused for others</span><label><span class="visually-hidden" style="position:absolute;left:-9999px">Month</span><select id="month" aria-label="Month"></select></label><button type="button" class="lockbtn" id="cpbtn">Password</button><button type="button" class="lockbtn" id="lockbtn">Lock</button></div>
 </div></header>
 <main>
   <p class="asof" id="asof">Loading…</p>
