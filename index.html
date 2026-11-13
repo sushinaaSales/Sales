@@ -121,10 +121,22 @@ td.l{text-align:left}
 #mt input{font:500 1rem var(--body);padding:11px 12px;border:1px solid var(--line);border-radius:10px;min-height:46px}
 #mt button{font:600 1rem var(--body);background:var(--brand);color:#fff;border:0;border-radius:10px;min-height:46px;cursor:pointer}
 #mtbadge{font:600 .72rem var(--body);background:#fff;color:var(--brand);border-radius:999px;padding:4px 9px}
+#devp{position:fixed;inset:0;z-index:45;background:rgba(40,0,6,.55);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto}
+#devp[hidden],#devbtn[hidden],#devform[hidden]{display:none!important}
+#devp .box{background:#fff;border-radius:16px;padding:18px 16px;width:100%;max-width:640px;display:flex;flex-direction:column;gap:10px}
+#devp h2{margin:0;font-size:1.1rem}
+#devp p{margin:0;color:var(--muted);font-size:.85rem}
+#devp input{font:500 1rem var(--body);padding:10px 12px;border:1px solid var(--line);border-radius:10px;min-height:44px}
+#devp button{font:600 .95rem var(--body);background:var(--brand);color:#fff;border:0;border-radius:10px;min-height:44px;padding:0 14px;cursor:pointer}
+#devp .x{background:transparent;color:var(--brand);border:1px solid var(--line)}
+#devp table{width:100%;border-collapse:collapse;font-size:.82rem}
+#devp th,#devp td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+#devp th{color:var(--muted);font-weight:600}
+#devp .tw{overflow-x:auto}
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='20261113073202';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='20261113221618';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
@@ -179,10 +191,44 @@ td.l{text-align:left}
   <button type="submit" id="unlock">Unlock</button>
   <p class="lerr" id="lerr" role="alert"></p>
 </form></div>
+<div id="devp" hidden role="dialog" aria-label="Devices"><div class="box">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2>Devices that opened the app</h2><button type="button" class="x" id="devx">Close</button></div>
+  <form id="devform"><p>Enter the owner code to see the list.</p><div style="display:flex;gap:8px"><input type="password" id="devcode" autocomplete="off" aria-label="Owner code" style="flex:1"><button type="submit">Show</button></div></form>
+  <p id="devmsg"></p>
+  <div class="tw" id="devlist"></div>
+</div></div>
 <header class="band"><div class="in">
   <div class="brand"><img src="logo.png" alt="Sushinaa"><div><h1>Sushinaa Sales</h1><small>Delivery sales · all apps</small></div></div>
-  <div style="display:flex;gap:8px;align-items:center"><span id="mtbadge" hidden title="Others see Temporarily unavailable">Paused for others</span><label><span class="visually-hidden" style="position:absolute;left:-9999px">Month</span><select id="month" aria-label="Month"></select></label><button type="button" class="lockbtn" id="cpbtn">Password</button><button type="button" class="lockbtn" id="lockbtn">Lock</button></div>
+  <div style="display:flex;gap:8px;align-items:center"><span id="mtbadge" hidden title="Others see Temporarily unavailable">Paused for others</span><label><span class="visually-hidden" style="position:absolute;left:-9999px">Month</span><select id="month" aria-label="Month"></select></label><button type="button" class="lockbtn" id="devbtn" hidden>Devices</button><button type="button" class="lockbtn" id="cpbtn">Password</button><button type="button" class="lockbtn" id="lockbtn">Lock</button></div>
 </div></header>
+<script>
+// Device counter (owner-only view). Each browser gets a random id; we keep only a short device label and times.
+(function(){var U='https://grwwiimcawtqffeoyehu.supabase.co/rest/v1/rpc/',K='sb_publishable_W_oiIsacJkrnhcTGxSPhKw_BBxfsWKz',OH='21f5e5bd58019aa5401dacbe03631883891b666ee77230a26705e35860da3ab7';
+  function own(){try{return localStorage.getItem('own')===OH}catch(e){return false}}
+  function did(){try{var d=localStorage.getItem('did');if(!d){d=crypto.randomUUID?crypto.randomUUID():'10000000-1000-4000-8000-100000000000'.replace(/[018]/g,function(c){return(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16)});localStorage.setItem('did',d)}return d}catch(e){return null}}
+  function label(){var u=navigator.userAgent,o=/iPhone/.test(u)?'iPhone':/iPad/.test(u)||(/Macintosh/.test(u)&&navigator.maxTouchPoints>1)?'iPad':/Android/.test(u)?(/Mobile/.test(u)?'Android phone':'Android tablet'):/Windows/.test(u)?'Windows PC':/Macintosh/.test(u)?'Mac':/Linux/.test(u)?'Linux':'Other';
+    var b=/SamsungBrowser/.test(u)?'Samsung':/Edg\//.test(u)?'Edge':/OPR\//.test(u)?'Opera':/CriOS|Chrome\//.test(u)?'Chrome':/FxiOS|Firefox\//.test(u)?'Firefox':/Safari\//.test(u)?'Safari':'Browser';
+    var a=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone?' (app)':'';return o+' · '+b+a}
+  function call(f,body){return fetch(U+f,{method:'POST',headers:{'apikey':K,'Content-Type':'application/json'},body:JSON.stringify(body)})}
+  window.__saPing=function(login){var d=did();if(!d)return;call('sa_ping',{p_device:d,p_label:label(),p_owner:own(),p_login:!!login}).catch(function(){})};
+  window.__saPing(false);
+  var $=function(i){return document.getElementById(i)};
+  if(own())$('devbtn').hidden=false;
+  function when(t){if(!t)return '—';var d=new Date(t);return d.toLocaleString('en-GB',{timeZone:'Asia/Qatar',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',hour12:true})}
+  function esc(t){return String(t).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  async function load(code){$('devmsg').textContent='Loading…';$('devlist').innerHTML='';
+    try{var r=await call('sa_stats',{p_code:code});if(!r.ok){$('devmsg').textContent='Wrong code.';$('devform').hidden=false;try{sessionStorage.removeItem('devc')}catch(e){}return}
+      var rows=await r.json(),me=did();try{sessionStorage.setItem('devc',code)}catch(e){}$('devform').hidden=true;
+      var others=rows.filter(function(x){return !x.is_owner});
+      $('devmsg').textContent=rows.length+' device'+(rows.length==1?'':'s')+' so far ('+others.length+' not yours). Counting started 13 Nov 2026. Times are Qatar time.';
+      $('devlist').innerHTML='<table><thead><tr><th>Device</th><th>Last opened</th><th>Last logged in</th><th>Opens</th><th>First seen</th></tr></thead><tbody>'+rows.map(function(x){return '<tr><td>'+esc(x.label||'Unknown')+(x.device_id===me?' <b>(this device)</b>':x.is_owner?' <b>(yours)</b>':'')+'</td><td>'+when(x.last_seen)+'</td><td>'+when(x.last_login)+'</td><td>'+x.opens+'</td><td>'+when(x.first_seen)+'</td></tr>'}).join('')+'</tbody></table>';
+    }catch(e){$('devmsg').textContent='Could not load. Check the connection.'}}
+  $('devbtn').addEventListener('click',function(){$('devp').hidden=false;var c=null;try{c=sessionStorage.getItem('devc')}catch(e){}if(c)load(c);else{$('devform').hidden=false;$('devmsg').textContent='';$('devlist').innerHTML='';setTimeout(function(){$('devcode').focus()},50)}});
+  $('devx').addEventListener('click',function(){$('devp').hidden=true});
+  $('devform').addEventListener('submit',function(e){e.preventDefault();var c=$('devcode').value.trim();$('devcode').value='';if(c)load(c)});
+})();
+</script>
+
 <main>
   <p class="asof" id="asof">Loading…</p>
   <div class="view" id="view-sales">
@@ -334,7 +380,7 @@ $('lockf').onsubmit=async e=>{e.preventDefault();$('lerr').textContent='';$('unl
 $('lockbtn').onclick=()=>{store.del();location.hash='';location.reload()};
 (async()=>{const sk=store.get();if(sk){try{RAW=b64(sk);DK=await importDK(RAW);$('lock').hidden=true;start();return}catch(e){store.del()}}showLock()})();
 let started=false;
-function start(){if(started)return;started=true;
+function start(){if(started)return;started=true;try{window.__saPing&&window.__saPing(true)}catch(e){}
 Promise.all([
   encCsv('enc/sales_daily.bin'),
   fetch('updated.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null)
