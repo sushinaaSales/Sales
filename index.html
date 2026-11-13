@@ -111,15 +111,51 @@ td.l{text-align:left}
 .lock button{font:600 1rem var(--body);background:var(--brand);color:#fff;border:0;border-radius:10px;min-height:46px;cursor:pointer}
 .lock .lerr{color:var(--brand-dark);font-size:.85rem;min-height:1.2em;margin:0}
 .lockbtn{font:500 .78rem var(--body);background:transparent;border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:8px;padding:6px 10px;min-height:34px;cursor:pointer}
+/* Maintenance screen: shown to everyone except owner devices while maint.json says on */
+#mt{position:fixed;inset:0;z-index:40;background:var(--brand);display:flex;align-items:center;justify-content:center;padding:24px 16px}
+#mt[hidden],#mt-own[hidden],#mtbadge[hidden]{display:none!important}
+#mt .box{background:#fff;border-radius:16px;box-shadow:0 8px 30px rgba(90,0,8,.3);padding:26px 20px;width:100%;max-width:340px;text-align:center;display:flex;flex-direction:column;gap:12px}
+#mt img{width:84px;height:84px;margin:0 auto;border-radius:16px;cursor:default;-webkit-tap-highlight-color:transparent}
+#mt h2{margin:0;font-size:1.2rem}
+#mt p{margin:0;color:var(--muted)}
+#mt input{font:500 1rem var(--body);padding:11px 12px;border:1px solid var(--line);border-radius:10px;min-height:46px}
+#mt button{font:600 1rem var(--body);background:var(--brand);color:#fff;border:0;border-radius:10px;min-height:46px;cursor:pointer}
+#mtbadge{font:600 .72rem var(--body);background:#fff;color:var(--brand);border-radius:999px;padding:4px 9px}
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='20261112171327';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='20261113072529';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
 </head>
 <body>
+<div id="mt" hidden><div class="box">
+  <img src="logo.png" alt="Sushinaa" id="mt-logo">
+  <h2>Under update</h2>
+  <p>The sales report is being updated. Please check again later.</p>
+  <form id="mt-own" hidden style="display:flex;flex-direction:column;gap:8px">
+    <input type="password" id="mt-code" placeholder="Owner code" aria-label="Owner code" autocomplete="off">
+    <button type="submit">Open</button>
+  </form>
+</div></div>
+<script>
+// Maintenance mode: maint.json {"on":true} shows "Under update" to everyone except devices unlocked with the owner code.
+(function(){var OH='21f5e5bd58019aa5401dacbe03631883891b666ee77230a26705e35860da3ab7',KEY='own';
+  function isOwn(){try{return localStorage.getItem(KEY)===OH}catch(e){return false}}
+  async function sha(t){var b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,'0')}).join('')}
+  async function tryCode(c){if(c&&await sha(c.trim())===OH){try{localStorage.setItem(KEY,OH)}catch(e){}return true}return false}
+  var m=location.hash.match(/owner=([^&]+)/);
+  var ready=(m?tryCode(decodeURIComponent(m[1])).then(function(){history.replaceState(null,'',location.pathname+location.search)}):Promise.resolve());
+  ready.then(function(){return fetch('maint.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():{}})}).catch(function(){return {}}).then(function(j){
+    var on=!!(j&&j.on);
+    if(on&&!isOwn()){document.getElementById('mt').hidden=false;try{document.getElementById('lock').hidden=true}catch(e){}window.__MT=true}
+    if(on&&isOwn()){var b=document.getElementById('mtbadge');if(b)b.hidden=false}
+  });
+  var taps=0,tt=null;document.getElementById('mt-logo').addEventListener('click',function(){taps++;clearTimeout(tt);tt=setTimeout(function(){taps=0},2000);if(taps>=5){document.getElementById('mt-own').hidden=false;document.getElementById('mt-code').focus()}});
+  document.getElementById('mt-own').addEventListener('submit',async function(e){e.preventDefault();if(await tryCode(document.getElementById('mt-code').value))location.reload();else{document.getElementById('mt-code').value='';document.getElementById('mt-code').placeholder='Wrong code'}});
+})();
+</script>
 <div class="lock" id="cp" hidden><form id="cpf" autocomplete="on">
   <h2>Set the password</h2>
   <p class="note" style="margin:0">Choose the login email and password everyone will use. Nothing is changed until you send me the code below.</p>
@@ -145,7 +181,7 @@ td.l{text-align:left}
 </form></div>
 <header class="band"><div class="in">
   <div class="brand"><img src="logo.png" alt="Sushinaa"><div><h1>Sushinaa Sales</h1><small>Delivery sales · all apps</small></div></div>
-  <div style="display:flex;gap:8px;align-items:center"><label><span class="visually-hidden" style="position:absolute;left:-9999px">Month</span><select id="month" aria-label="Month"></select></label><button type="button" class="lockbtn" id="cpbtn">Password</button><button type="button" class="lockbtn" id="lockbtn">Lock</button></div>
+  <div style="display:flex;gap:8px;align-items:center"><span id="mtbadge" hidden title="Others see Under update">Paused for others</span><label><span class="visually-hidden" style="position:absolute;left:-9999px">Month</span><select id="month" aria-label="Month"></select></label><button type="button" class="lockbtn" id="cpbtn">Password</button><button type="button" class="lockbtn" id="lockbtn">Lock</button></div>
 </div></header>
 <main>
   <p class="asof" id="asof">Loading…</p>
@@ -277,7 +313,7 @@ async function getEnc(path){
   return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},DK,buf.slice(12)));
 }
 const encCsv=path=>getEnc(path).then(t=>d3.csvParse(t));
-function showLock(msg){$('lock').hidden=false;$('lerr').textContent=msg||'';setTimeout(()=>{try{($('em').value?$('pw'):$('em')).focus()}catch(e){}},50)}
+function showLock(msg){if(window.__MT)return;$('lock').hidden=false;$('lerr').textContent=msg||'';setTimeout(()=>{try{($('em').value?$('pw'):$('em')).focus()}catch(e){}},50)}
 $('cpbtn').onclick=()=>{$('cp').hidden=false;$('cp-out').hidden=true;$('cp-err').textContent=''};
 $('cp-close').onclick=()=>{$('cp').hidden=true;['cp-pw','cp-pw2'].forEach(i=>$(i).value='')};
 $('cp-copy').onclick=async()=>{try{await navigator.clipboard.writeText($('cp-code').value);$('cp-copy').textContent='Copied'}catch(e){$('cp-code').select()}};
