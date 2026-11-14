@@ -92,6 +92,7 @@ main{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 .count{font-size:.8rem;color:var(--muted);margin:0 0 6px}
 td.it{white-space:normal;text-align:left;min-width:220px;max-width:420px;color:var(--muted);font-size:.8rem}
 td.l{text-align:left}
+.cby{display:block;width:max-content;margin-top:3px;padding:1px 7px;border-radius:999px;background:#e3f4ee;color:#0d6b57;font-size:.66rem;font-weight:600;white-space:nowrap}
 .pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.72rem;font-weight:600}
 .pill.ok{background:#e3f4ee;color:#0d6b57}.pill.x{background:#fde4e5;color:#a8161e}.pill.p{background:#e8effc;color:#24529f}
 .more{font:600 .85rem var(--body);border:1px solid var(--line);background:#fff;color:var(--brand);border-radius:9px;padding:9px 14px;min-height:40px;margin-top:10px;cursor:pointer}
@@ -151,7 +152,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}.tabs a[hidden]
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='202611141830';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='202611141905';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
@@ -642,7 +643,7 @@ async function drawBank(){
     td(tr,d?D(P(d)):'—');td(tr,t.app,'l');td(tr,t.branch,'l');td(tr,D(P(t.period_from))+(t.period_to!==t.period_from?' – '+D(P(t.period_to)):''),'l');
     td(tr,t.amount?q2(+t.amount):'—');
     const st=td(tr,'','l');const pl=document.createElement('span');pl.className='pill '+(bPaid(t)?'ok':/Held|not/.test(t.status)?'x':'p');pl.textContent=t.app==='Rafeeq'&&+t.amount>0?(bPaid(t)?'Cheque deposited':'Statement issued, cheque not deposited yet'):t.status.replace(/ \d{4}-\d\d-\d\d$/,'');st.append(pl);
-    td(tr,t.bank_date?'Received '+D(P(t.bank_date))+(t.bank_amount&&Math.abs(+t.bank_amount-(+t.amount))>.5?' (QAR '+q2(+t.bank_amount)+')':''):(bPaid(t)?'Not matched yet':'—'),'l');
+    {const c=td(tr,t.bank_date?'Received '+D(P(t.bank_date))+(t.bank_amount&&Math.abs(+t.bank_amount-(+t.amount))>.5?' (QAR '+q2(+t.bank_amount)+')':''):(bPaid(t)?'Not matched yet':'—'),'l');if(t.bank_date){const g=document.createElement('span');g.className='cby';g.textContent='Confirmed by Faris';c.append(g)}}
     const c=td(tr,'');const k=bKey(t);if(bPaid(t)){if(own&&bCode()){const cb=document.createElement('input');cb.type='checkbox';cb.checked=seen.has(k);cb.setAttribute('aria-label','Seen in bank');
       cb.onchange=async()=>{cb.disabled=true;const r=await sbc('sa_bank_mark',{p_code:bCode(),p_id:k,p_on:cb.checked}).catch(()=>null);cb.disabled=false;if(r&&r.ok){cb.checked?seen.add(k):seen.delete(k)}else{cb.checked=!cb.checked;try{sessionStorage.removeItem('devc')}catch(e){}$('b-own').hidden=false}};c.append(cb)}else c.textContent=seen.has(k)?'✓':''}
     return tr}));
@@ -683,7 +684,7 @@ function drawBM(all,bm,bd){
     const net=rs.find(r=>r.kind==='net');if(net)line(net.line,net.note,q2(+net.amount),'tot');
     const tx=all.filter(t=>t.app===a&&t.period_from.slice(0,7)===cur&&t.amount);const paid=sum(tx,t=>+t.amount);
     const inb=tx.filter(t=>t.bank_date);
-    line('Transfers for these sales',tx.length+' transfers'+(inb.length?', '+inb.length+' found in our bank':''),q2(paid));
+    line('Transfers for these sales',tx.length+' transfers'+(inb.length?', '+inb.length+' confirmed in our bank by Faris':''),q2(paid));
     if(net){const df=paid-(+net.amount);line('Difference',Math.abs(df)<1?'Transfers match the statement':'Transfers and statement differ',(df>=0?'+':'−')+q2(Math.abs(df)),Math.abs(df)<1?'':'tot')}
     c.append(tb);return c}));
 }
