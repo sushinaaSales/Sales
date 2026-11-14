@@ -78,7 +78,7 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--c2);outline-of
 .err{color:var(--warn);font-weight:600}
 
 /* Bottom tab bar: four views, thumb-reachable on phones */
-.tabs{position:fixed;left:0;right:0;bottom:0;z-index:5;background:#fff;box-shadow:0 -2px 12px rgba(90,0,8,.18);display:grid;grid-template-columns:repeat(6,1fr);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:5;background:#fff;box-shadow:0 -2px 12px rgba(90,0,8,.18);display:grid;grid-template-columns:repeat(7,1fr);padding-bottom:env(safe-area-inset-bottom,0px)}
 .tabs a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px 7px;font:500 .66rem var(--body);color:var(--muted);text-decoration:none;min-height:54px}
 .tabs a svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .tabs a[aria-current=page]{color:var(--brand)}
@@ -107,6 +107,11 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}.tabs a[hidden]
 .pbc table{width:100%;font-size:.8rem}.pbc td{padding:5px 0;vertical-align:top}.pbc td:first-child{white-space:normal;position:static;background:none}.pbc td+td{text-align:right;white-space:nowrap;padding-left:8px}
 .pbc .ex{display:block;font-size:.7rem;color:var(--muted);margin-top:1px}
 .pbc tr.tot td{border-top:1px solid var(--line)}
+#view-ideas .card{margin-bottom:12px}.ins{border-left:4px solid #2f6fde;background:#f6f8fd;border-radius:8px;padding:8px 10px;margin:0 0 8px}
+.ins.high{border-color:#d52029;background:#fdf1f2}.ins.medium{border-color:#e0a100;background:#fff9e6}.ins.good{border-color:#15967c;background:#eef8f5}
+.ins b{display:block;font-size:.88rem;margin-bottom:2px}.ins p{margin:0;font-size:.8rem;color:#3d3335;line-height:1.4}.ins .tg{font-size:.68rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.heat td{text-align:center;font-size:.72rem;padding:5px 3px;border-radius:4px}.heat th{font-size:.66rem;padding:3px 2px;text-align:center;white-space:nowrap}.heat td:first-child{text-align:left;white-space:nowrap;font-weight:600}
+.tabs a{font-size:.6rem}
 .pbc tr.bdl{cursor:pointer}.pbc tr.bdl:hover td,.pbc tr.bdl:focus-visible td{background:var(--soft,rgba(0,0,0,.04))}.pbc .bda{display:inline-block;width:1em;color:var(--muted)}
 .pbc tr.bdx>td{padding:2px 0 10px;text-align:left!important;white-space:normal!important}.bdw{background:var(--soft,rgba(0,0,0,.04));border-radius:9px;padding:8px 10px}
 .bdw table{width:100%;font-size:.75rem;margin:0 0 6px}.bdw th{font-weight:600;color:var(--muted);text-align:left;padding:3px 0}.bdw td{padding:3px 0}.bdw td+td{padding-left:8px}
@@ -152,7 +157,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}.tabs a[hidden]
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='202611141905';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='202611142215';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
@@ -348,6 +353,14 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}.tabs a[hidden]
       <div class="wrap"><table><thead><tr><th>Time</th><th>Branch</th><th>App</th><th>Order ID</th><th>Cancelled by</th><th style="text-align:left">Reason</th><th>QAR</th><th style="text-align:left">Items</th></tr></thead><tbody id="c-list"></tbody></table></div>
     </section>
   </div>
+  <div class="view" id="view-ideas" hidden>
+    <section class="card">
+      <h2>Suggestions to improve</h2>
+      <p class="note" id="ins-asof" style="margin:0 0 10px"></p>
+      <div id="ins-top"></div>
+    </section>
+    <div id="ins-secs"></div>
+  </div>
   <div class="view" id="view-items" hidden>
     <section class="card">
       <h2>Item sales</h2>
@@ -382,6 +395,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}.tabs a[hidden]
 </main>
 <nav class="tabs" aria-label="Sections">
   <a href="#sales" data-v="sales"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Sales</a>
+  <a href="#ideas" data-v="ideas"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>Suggestions</a>
   <a href="#orders" data-v="orders"><svg viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>Orders</a>
   <a href="#cancelled" data-v="cancelled"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>Cancelled</a>
   <a href="#payouts" data-v="payouts"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 15h2"/></svg>Payouts</a>
@@ -569,13 +583,14 @@ let oLimit=100,iLimit=40;
 function curView(){return (location.hash||'#sales').slice(1)}
 async function showView(){
   if(!started||!cur)return;
-  const v=['sales','orders','cancelled','items','payouts','bank'].includes(curView())?curView():'sales';
+  const v=['sales','ideas','orders','cancelled','items','payouts','bank'].includes(curView())?curView():'sales';
   $('cpbtn').hidden=!OK;moneyBar(v);
   document.querySelectorAll('.view').forEach(e=>e.hidden=e.id!=='view-'+v);
   if(!OK&&(v==='payouts'||v==='bank')&&!MONEY){locked(false);return}
   document.querySelectorAll('.tabs a').forEach(a=>a.dataset.v===v?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
   if(v==='sales'){drawChart();return}
   if(v==='bank'){drawBank();return}
+  if(v==='ideas'){drawIdeas();return}
   const os=await loadOrders(cur);
   const msg=v==='orders'?'o-count':v==='items'?'i-count':null;
   if(!os){if(msg)$(msg).textContent='Order details are not available for this month yet.';
@@ -667,6 +682,25 @@ function bdView(dr,amt){
   put(os.slice(0,N));w.append(t2);
   if(os.length>N){const b=document.createElement('button');b.className='bdm';b.type='button';b.textContent='Show all '+os.length+' orders';b.onclick=e=>{e.stopPropagation();put(os.slice(N));b.remove()};w.append(b)}
   return w}
+let INS=null;
+async function drawIdeas(){
+  if(!INS)INS=getEnc('enc/insights.bin').then(t=>JSON.parse(t)).catch(()=>null);
+  const j=await INS;const box=$('ins-secs');
+  if(!j){$('ins-asof').textContent='Suggestions are being prepared. They will appear here after the next update.';$('ins-top').replaceChildren();box.replaceChildren();return}
+  const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
+  const cardEl=c=>{const d=el('div','ins '+c.level);if(c.tag)d.append(el('span','tg',c.tag));d.append(el('b','',c.title),el('p','',c.text));return d};
+  $('ins-asof').textContent='Reviewed daily and monthly from all four apps since October. Last review '+j.generated.slice(0,10).split('-').reverse().join('/')+' at '+j.generated.slice(11)+'. Most urgent first:';
+  $('ins-top').replaceChildren(...(j.top.length?j.top.map(cardEl):[el('p','note','Nothing urgent right now.')]));
+  box.replaceChildren(...j.sections.map(s=>{const c=el('section','card');c.append(el('h2','',s.title));if(s.sub)c.append(el('p','note',s.sub));c.lastChild.style.margin='0 0 10px';
+    s.cards.forEach(x=>c.append(cardEl(x)));
+    if(s.heat){const w=el('div','wrap'),t=el('table','heat'),hr=el('tr');hr.append(el('th','',''));s.heat.hours.forEach(h=>hr.append(el('th','',h)));t.append(hr);
+      const mx=Math.max(...s.heat.rows.flatMap(r=>r.slice(1)))||1;
+      s.heat.rows.forEach(r=>{const tr=el('tr');tr.append(el('td','',r[0]));r.slice(1).forEach(v=>{const td=el('td','',v?String(v):'');const a=v/mx;td.style.background='rgba(213,32,41,'+(0.06+a*0.8).toFixed(2)+')';td.style.color=a>0.55?'#fff':'inherit';tr.append(td)});t.append(tr)});
+      w.append(t);c.append(w);c.append(el('p','note','Darker = busier. Numbers are average orders per day in that hour.'))}
+    if(s.table&&s.table.rows.length){const w=el('div','wrap'),t=el('table'),th=el('thead'),hr=el('tr');s.table.head.forEach((h,i)=>{const x=el('th','',h);if(i>0&&i>=s.table.head.length-4&&!/App|Branch/.test(h))x.style.textAlign='right';hr.append(x)});th.append(hr);t.append(th);
+      const tb=el('tbody');s.table.rows.forEach(r=>{const tr=el('tr');r.forEach((v,i)=>{const td=el('td',/^[-+]?[\d,.]+%?( min)?$|^-$/.test(v)?'':'l',v);if(/^-\d/.test(v)&&/%$/.test(v))td.style.color='#a8161e';tr.append(td)});tb.append(tr)});t.append(tb);w.append(t);c.append(w)}
+    return c}));
+}
 function drawBM(all,bm,bd){
   const pc=d3.format('.1%'),box=$('bm');const ms=bm.filter(r=>r.month===cur);
   $('bm-card').hidden=!ms.length;if(!ms.length){box.replaceChildren();return}
