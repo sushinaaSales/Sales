@@ -133,7 +133,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}.tabs a[hidden]
 #mtbadge{font:600 .72rem var(--body);background:#fff;color:var(--brand);border-radius:999px;padding:4px 9px}
 #devp{position:fixed;inset:0;z-index:45;background:rgba(40,0,6,.55);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto}
 #devp[hidden],#devbtn[hidden],#devform[hidden]{display:none!important}
-#share-bar[hidden]{display:none!important}
+#share-bar[hidden],#money-bar[hidden]{display:none!important}
 #devp .box{background:#fff;border-radius:16px;padding:18px 16px;width:100%;max-width:640px;display:flex;flex-direction:column;gap:10px}
 #devp h2{margin:0;font-size:1.1rem}
 #devp p{margin:0;color:var(--muted);font-size:.85rem}
@@ -147,7 +147,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}.tabs a[hidden]
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='202611141329';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='202611141333';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
@@ -216,6 +216,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}.tabs a[hidden]
   <div class="brand"><img src="logo.png" alt="Sushinaa"><div><h1>Sushinaa Sales</h1><small>Delivery sales · all apps</small></div></div>
   <div style="display:flex;gap:8px;align-items:center"><span id="mtbadge" hidden title="Others see Temporarily unavailable">Paused for others</span><label><span class="visually-hidden" style="position:absolute;left:-9999px">Month</span><select id="month" aria-label="Month"></select></label><button type="button" class="lockbtn" id="devbtn" hidden>Devices</button><button type="button" class="lockbtn" id="cpbtn">Password</button><button type="button" class="lockbtn" id="lockbtn">Lock</button></div>
 </div></header>
+<div id="money-bar" hidden style="max-width:1200px;margin:10px auto 0;padding:10px 14px;border-radius:12px;background:#fff4d6;color:#5c4400;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:14px"><span id="money-txt" style="flex:1;min-width:200px"></span><input id="money-code" type="password" placeholder="Owner code" autocomplete="off" hidden style="width:120px"><button type="button" id="money-btn" class="btn"></button></div>
 <div id="share-bar" hidden style="max-width:1200px;margin:10px auto 0;padding:10px 14px;border-radius:12px;background:#fff4d6;color:#5c4400;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:14px"><span id="share-txt" style="flex:1;min-width:200px"></span><input id="share-code" type="password" placeholder="Owner code" autocomplete="off" hidden style="width:120px"><button type="button" id="share-btn" class="btn"></button></div>
 <script>
 // Device counter (owner-only view). Each browser gets a random id; we keep only a short device label and times.
@@ -294,6 +295,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}.tabs a[hidden]
       <button type="button" class="more" id="o-more" hidden>Show more</button>
     </section>
   </div>
+  <div class="view" id="view-locked" hidden><section class="card" style="text-align:center;padding:40px 20px"><h2 id="lk-h" style="margin:0 0 8px">Not shared yet</h2><p id="lk-p" style="margin:0;color:var(--muted,#666)">This page will show here once it is shared.</p></section></div>
   <div class="view" id="view-bank" hidden>
     <section class="tiles">
       <div class="tile"><span class="lbl">Payable</span><span class="big" id="b2">—</span><span class="sub" id="b2s">QAR the apps owe for this month's sales</span></div>
@@ -460,9 +462,9 @@ $('setupf').onsubmit=async e=>{e.preventDefault();const em=$('su-em').value.trim
     await setOwnerKeys(window.__SETUP);store.set(B64(RAW));ostore.set(B64(ORAW));try{sessionStorage.setItem('devc',$('su-code').value.trim())}catch(x){}
     window.__SETUP=null;location.replace(location.pathname+'#sales');setTimeout(function(){location.reload()},50)}catch(x){$('su-err').textContent='Something went wrong. Please try again.';$('su-go').disabled=false}};
 let started=false;
-let PUBLIC_FROM='2026-10';
+let PUBLIC_FROM='2026-10',MONEY=false;
 async function start(){if(window.__MTLOGIN&&!OK){store.del();$('mt').hidden=false;return}if(started)return;started=true;$('devbtn').hidden=!OK;
-  try{const r=await fetch('https://grwwiimcawtqffeoyehu.supabase.co/rest/v1/rpc/sa_settings_get',{method:'POST',headers:{apikey:'sb_publishable_W_oiIsacJkrnhcTGxSPhKw_BBxfsWKz','Content-Type':'application/json'},body:'{}'});if(r.ok){const j=await r.json();if(j&&/^\d{4}-\d\d$/.test(j.public_from||''))PUBLIC_FROM=j.public_from}}catch(e){}try{window.__saPing&&window.__saPing(true)}catch(e){}
+  try{const r=await fetch('https://grwwiimcawtqffeoyehu.supabase.co/rest/v1/rpc/sa_settings_get',{method:'POST',headers:{apikey:'sb_publishable_W_oiIsacJkrnhcTGxSPhKw_BBxfsWKz','Content-Type':'application/json'},body:'{}'});if(r.ok){const j=await r.json();if(j&&/^\d{4}-\d\d$/.test(j.public_from||''))PUBLIC_FROM=j.public_from;MONEY=!!(j&&j.money_shared==='on')}}catch(e){}try{window.__saPing&&window.__saPing(true)}catch(e){}
 Promise.all([
   encCsv('enc/sales_daily.bin'),
   fetch('updated.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null)
@@ -562,9 +564,10 @@ let oLimit=100,iLimit=40;
 function curView(){return (location.hash||'#sales').slice(1)}
 async function showView(){
   if(!started||!cur)return;
-  const v=['sales','orders','cancelled','items'].concat(OK?['payouts','bank']:[]).includes(curView())?curView():'sales';
-  document.querySelectorAll('.tabs a[data-v=payouts],.tabs a[data-v=bank]').forEach(a=>a.hidden=!OK);$('cpbtn').hidden=!OK;
+  const v=['sales','orders','cancelled','items','payouts','bank'].includes(curView())?curView():'sales';
+  $('cpbtn').hidden=!OK;moneyBar(v);
   document.querySelectorAll('.view').forEach(e=>e.hidden=e.id!=='view-'+v);
+  if(!OK&&(v==='payouts'||v==='bank')&&!MONEY){locked(false);return}
   document.querySelectorAll('.tabs a').forEach(a=>a.dataset.v===v?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
   if(v==='sales'){drawChart();return}
   if(v==='bank'){drawBank();return}
@@ -573,10 +576,20 @@ async function showView(){
   if(!os){if(msg)$(msg).textContent='Order details are not available for this month yet.';
     if(v==='orders')$('o-body').replaceChildren();if(v==='items')$('i-body').replaceChildren();if(v==='payouts'){$('p-body').replaceChildren();$('pb').replaceChildren();['p1','p2','p3','p4'].forEach(i=>$(i).textContent='—')}if(v==='cancelled'){['c-br','c-rs','c-list'].forEach(i=>$(i).replaceChildren());['c1','c2','c3','c4'].forEach(i=>$(i).textContent='—');$('c4s').textContent='No order details for this month'}
     return}
+  if(v==='payouts'&&!OK&&os.length&&os[0].commission===undefined){locked(true);return}
   if(v==='payouts')drawPayouts(os);if(v==='orders'){drawHours(os);drawOrders(os)}if(v==='cancelled')drawCancelled(os);if(v==='items')drawItems(os);
 }
 let BK=null,BSEEN=null,BM=null;
 const SBU='https://grwwiimcawtqffeoyehu.supabase.co/rest/v1/rpc/',SBK='sb_publishable_W_oiIsacJkrnhcTGxSPhKw_BBxfsWKz';
+function locked(soon){document.querySelectorAll('.view').forEach(e=>e.hidden=e.id!=='view-locked');
+  $('lk-h').textContent=soon?'Coming soon':'Not shared yet';$('lk-p').textContent=soon?'This page has been shared and will show here after the next update (within an hour).':'This page will show here once it is shared.'}
+function moneyBar(v){const b=$('money-bar');if(!OK||(v!=='payouts'&&v!=='bank')){b.hidden=true;return}b.hidden=false;
+  $('money-txt').textContent=MONEY?'Management can see Payouts and Bank (from '+M(P(PUBLIC_FROM+'-01'))+'). Changes reach them at the next hourly update.':'Management sees the Payouts and Bank buttons but no data. Only you can see this page.';
+  $('money-btn').textContent=MONEY?'Hide from management':'Show to management';$('money-code').hidden=!!bCode()}
+$('money-btn').onclick=async()=>{let c=bCode();if(!c){c=$('money-code').value.trim();if(!c){$('money-code').hidden=false;$('money-code').focus();return}}
+  const nv=MONEY?'off':'on';$('money-btn').disabled=true;
+  const r=await sbc('sa_settings_set',{p_code:c,p_key:'money_shared',p_value:nv}).then(r=>r.ok?r.json():false).catch(()=>false);$('money-btn').disabled=false;
+  if(r===true){try{sessionStorage.setItem('devc',c)}catch(e){}$('money-code').value='';MONEY=nv==='on';moneyBar(curView())}else{try{sessionStorage.removeItem('devc')}catch(e){}$('money-code').hidden=false;$('money-code').value='';$('money-code').placeholder='Wrong code'}};
 function shareBar(){const b=$('share-bar');if(!OK||!cur||cur>='2026-10'){b.hidden=true;return}
   const shown=cur>=PUBLIC_FROM,mn=M(P(cur+'-01'));b.hidden=false;
   $('share-txt').textContent=shown?mn+' is visible to management (changes reach them at the next hourly update).':'Only your owner login can see '+mn+'. Management sees '+M(P(PUBLIC_FROM+'-01'))+' onwards.';
@@ -596,7 +609,7 @@ async function drawBank(){
   if(!BSEEN)BSEEN=sbc('sa_bank_seen_list').then(r=>r.ok?r.json():[]).then(a=>new Set(a.map(x=>x.id))).catch(()=>new Set());
   if(!BM)BM=encCsv('enc/bank_months.bin').catch(()=>[]);
   const all0=await BK,seen=await BSEEN,bm=(await BM)||[];const all=all0&&all0.filter(t=>t.period_to>=(bOwn()?'2026-09':PUBLIC_FROM)+'-01');
-  if(!all){$('b-list').replaceChildren();$('b1').textContent='—';return}
+  if(!all){$('b-list').replaceChildren();$('b1').textContent='—';if(!OK&&curView()==='bank')locked(true);return}
   const fl=$('b-app-f');if(fl.options.length<2)APPS.forEach(a=>fl.append(new Option(a,a)));
   // Grouped by the SALES month each payment is for (user, 2026-11-14). Only October 2026 onwards is shown.
   const inM=t=>t.period_from.slice(0,7)===cur;
