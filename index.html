@@ -106,6 +106,10 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}.tabs a[hidden]
 .pbc table{width:100%;font-size:.8rem}.pbc td{padding:5px 0;vertical-align:top}.pbc td:first-child{white-space:normal;position:static;background:none}.pbc td+td{text-align:right;white-space:nowrap;padding-left:8px}
 .pbc .ex{display:block;font-size:.7rem;color:var(--muted);margin-top:1px}
 .pbc tr.tot td{border-top:1px solid var(--line)}
+.pbc tr.bdl{cursor:pointer}.pbc tr.bdl:hover td,.pbc tr.bdl:focus-visible td{background:var(--soft,rgba(0,0,0,.04))}.pbc .bda{display:inline-block;width:1em;color:var(--muted)}
+.pbc tr.bdx>td{padding:2px 0 10px;text-align:left!important;white-space:normal!important}.bdw{background:var(--soft,rgba(0,0,0,.04));border-radius:9px;padding:8px 10px}
+.bdw table{width:100%;font-size:.75rem;margin:0 0 6px}.bdw th{font-weight:600;color:var(--muted);text-align:left;padding:3px 0}.bdw td{padding:3px 0}.bdw td+td{padding-left:8px}
+.bdw td.l{text-align:left!important}.bdw td{white-space:normal!important}.bdw td:last-child{white-space:nowrap!important}.pbc tr.bdx>td{max-width:0}.bdw .bdo td:nth-child(3){word-break:break-all}.bdn{font-size:.72rem;color:var(--muted);margin:2px 0 6px}.bdm{font:500 .75rem var(--body);border:1px solid var(--line);background:none;border-radius:8px;padding:6px 10px;cursor:pointer;color:inherit}
 .bars td.b{width:28%;min-width:60px}
 .bars td:first-child{min-width:150px;white-space:normal}
 .hbar{height:8px;border-radius:4px;background:var(--brand);opacity:.85}
@@ -147,7 +151,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}.tabs a[hidden]
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='202611141505';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='202611141830';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
@@ -579,7 +583,7 @@ async function showView(){
   if(v==='payouts'&&!OK&&os.length&&os[0].commission===undefined){locked(true);return}
   if(v==='payouts')drawPayouts(os);if(v==='orders'){drawHours(os);drawOrders(os)}if(v==='cancelled')drawCancelled(os);if(v==='items')drawItems(os);
 }
-let BK=null,BSEEN=null,BM=null;
+let BK=null,BSEEN=null,BM=null,BD=null;
 const SBU='https://grwwiimcawtqffeoyehu.supabase.co/rest/v1/rpc/',SBK='sb_publishable_W_oiIsacJkrnhcTGxSPhKw_BBxfsWKz';
 function locked(soon){document.querySelectorAll('.view').forEach(e=>e.hidden=e.id!=='view-locked');
   $('lk-h').textContent='Work in progress';$('lk-p').textContent='This section is being worked on in the back end. It will be available here soon.'}
@@ -608,6 +612,7 @@ async function drawBank(){
   if(!BK)BK=encCsv('enc/bank.bin').catch(()=>null);
   if(!BSEEN)BSEEN=sbc('sa_bank_seen_list').then(r=>r.ok?r.json():[]).then(a=>new Set(a.map(x=>x.id))).catch(()=>new Set());
   if(!BM)BM=encCsv('enc/bank_months.bin').catch(()=>[]);
+  if(!BD)BD=encCsv('enc/bank_detail.bin').catch(()=>[]);
   const all0=await BK,seen=await BSEEN,bm=(await BM)||[];const all=all0&&all0.filter(t=>t.period_to>=(bOwn()?'2026-09':PUBLIC_FROM)+'-01');
   if(!all){$('b-list').replaceChildren();$('b1').textContent='—';if(!OK&&curView()==='bank')locked(true);return}
   const fl=$('b-app-f');if(fl.options.length<2)APPS.forEach(a=>fl.append(new Option(a,a)));
@@ -629,7 +634,7 @@ async function drawBank(){
   all.filter(t=>inM(t)&&t.status==='No statement in dashboard yet').forEach(t=>al.push(t.app+' has no statement yet for '+D(P(t.period_from))+' to '+D(P(t.period_to))+'.'));
   wait.filter(t=>t.app==='Snoonu'&&/not transferred/.test(t.status)).forEach(t=>al.push('Snoonu approved QAR '+q(+t.amount)+' for '+D(P(t.period_from))+' to '+D(P(t.period_to))+' but has not transferred it yet.'));
   $('b-alert').textContent=al.join(' ');
-  drawBM(all,bm);
+  drawBM(all,bm,(await BD)||[]);
   const af=fl.value,sc=$('b-scope').value;
   const ls=all.filter(t=>(!af||t.app===af)&&(sc==='all'||inM(t)));
   const own=bOwn();$('b-own').hidden=!own||!!bCode();
@@ -645,14 +650,35 @@ async function drawBank(){
     td(tr,'Total');td(tr,'','l');td(tr,'','l');td(tr,pd.length+' payments','l');td(tr,q2(sum(pd,t=>+t.amount)));td(tr,'','l');
     td(tr,bk.length?'In bank QAR '+q2(sum(bk,t=>+t.bank_amount||+t.amount))+(bk.length<pd.length?' · not yet QAR '+q2(sum(pd.filter(t=>!t.bank_date),t=>+t.amount)):''):'—','l');td(tr,'');$('b-list').append(tr)}
 }
-function drawBM(all,bm){
+function bdView(dr,amt){
+  const w=document.createElement('div');w.className='bdw';const os=dr.filter(r=>r.kind==='o');
+  const sg=v=>(v<0?'−':'')+q2(Math.abs(v));
+  const br=os.length?d3.rollups(os,v=>[sum(v,r=>+r.amount),v.length],r=>r.branch):dr.map(r=>[r.branch,[+r.amount,+r.n]]);
+  br.sort((x,y)=>BR.indexOf(x[0])-BR.indexOf(y[0]));
+  const t1=document.createElement('table');const hd=document.createElement('tr');['Branch','Orders','QAR'].forEach((h,i)=>{const th=document.createElement('th');th.textContent=h;if(i)th.style.textAlign='right';hd.append(th)});t1.append(hd);
+  let tv=0,tn=0;br.forEach(([b,[v,n]])=>{tv+=v;tn+=n;const tr=document.createElement('tr');td(tr,b||'—');td(tr,q(n));td(tr,sg(v));t1.append(tr)});
+  if(br.length>1){const tr=document.createElement('tr');tr.className='tot';td(tr,'Total');td(tr,q(tn));td(tr,sg(tv));t1.append(tr)}
+  w.append(t1);
+  if(amt!==undefined&&Math.abs(tv-amt)>=1){const p=document.createElement('p');p.className='bdn';p.textContent='Our order reports add up to '+sg(tv)+'; the statement says '+sg(amt)+' (difference '+sg(tv-amt)+'). The statement figure is the one used.';w.append(p)}
+  if(!os.length){const p=document.createElement('p');p.className='bdn';p.textContent='Too many orders to list here. Open the Orders tab to see each one.';w.append(p);return w}
+  const t2=document.createElement('table');t2.className='bdo';const h2=document.createElement('tr');['Date','Branch','Order','QAR'].forEach((h,i)=>{const th=document.createElement('th');th.textContent=h;if(i===3)th.style.textAlign='right';h2.append(th)});t2.append(h2);
+  const N=40;const put=lst=>lst.forEach(r=>{const tr=document.createElement('tr');td(tr,r.date?TF(r.date):'—','l');td(tr,r.branch||'—','l');const c=td(tr,r.order_id||'—','l');if(r.note){const e=document.createElement('span');e.className='ex';e.textContent=r.note;c.append(e)}td(tr,sg(+r.amount));t2.append(tr)});
+  put(os.slice(0,N));w.append(t2);
+  if(os.length>N){const b=document.createElement('button');b.className='bdm';b.type='button';b.textContent='Show all '+os.length+' orders';b.onclick=e=>{e.stopPropagation();put(os.slice(N));b.remove()};w.append(b)}
+  return w}
+function drawBM(all,bm,bd){
   const pc=d3.format('.1%'),box=$('bm');const ms=bm.filter(r=>r.month===cur);
   $('bm-card').hidden=!ms.length;if(!ms.length){box.replaceChildren();return}
   $('bm-sub').textContent='What each app charged for '+M(P(cur+'-01'))+' from its monthly statement, and whether the transfers add up to it.';
   box.replaceChildren(...APPS.filter(a=>ms.some(r=>r.app===a)).map(a=>{const rs=ms.filter(r=>r.app===a);const g=+((rs.find(r=>r.kind==='sales')||{}).amount||0);
     const c=document.createElement('div');c.className='pbc';const h=document.createElement('h3');h.textContent=a;const tg=document.createElement('span');tg.className='tag';tg.textContent='from statement';h.append(tg);c.append(h);
-    const tb=document.createElement('table');const line=(l,ex,v,cls)=>{const tr=document.createElement('tr');if(cls)tr.className=cls;const x=document.createElement('td');x.textContent=l;if(ex){const e=document.createElement('span');e.className='ex';e.textContent=ex;x.append(e)}tr.append(x);td(tr,v);tb.append(tr)};
-    let ch=0,er=0;rs.forEach(r=>{const v=+r.amount;if(r.kind==='sales')line(r.line,r.note,q2(v));else if(r.kind==='earning'){er+=v;line(r.line,r.note,(v>=0?'+':'−')+q2(Math.abs(v)))}else if(r.kind==='cash')line(r.line,r.note,'−'+q2(-v));else if(r.kind==='charge'){ch+=v;line(r.line,r.note,'−'+q2(-v)+' · '+(g?pc(-v/g):''))}});
+    const tb=document.createElement('table');const line=(l,ex,v,cls,amt)=>{const tr=document.createElement('tr');if(cls)tr.className=cls;const x=document.createElement('td');x.textContent=l;if(ex){const e=document.createElement('span');e.className='ex';e.textContent=ex;x.append(e)}tr.append(x);td(tr,v);tb.append(tr);
+      const dr=bd.filter(r=>r.app===a&&r.month===cur&&r.line===l);if(!dr.length)return;
+      tr.classList.add('bdl');tr.tabIndex=0;tr.setAttribute('role','button');tr.setAttribute('aria-expanded','false');const ar=document.createElement('span');ar.className='bda';ar.textContent='▸';x.prepend(ar);
+      let box=null;const tog=()=>{if(box){box.remove();box=null;ar.textContent='▸';tr.setAttribute('aria-expanded','false');return}
+        box=document.createElement('tr');box.className='bdx';const c=document.createElement('td');c.colSpan=2;c.append(bdView(dr,amt));box.append(c);tr.after(box);ar.textContent='▾';tr.setAttribute('aria-expanded','true')};
+      tr.onclick=tog;tr.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tog()}}};
+    let ch=0,er=0;rs.forEach(r=>{const v=+r.amount;if(r.kind==='sales')line(r.line,r.note,q2(v),'',v);else if(r.kind==='earning'){er+=v;line(r.line,r.note,(v>=0?'+':'−')+q2(Math.abs(v)),'',v)}else if(r.kind==='cash')line(r.line,r.note,'−'+q2(-v),'',v);else if(r.kind==='charge'){ch+=v;line(r.line,r.note,'−'+q2(-v)+' · '+(g?pc(-v/g):''),'',v)}});
     const nc=ch+er;line(er?'Total charges (after credits)':'Total charges',er?'Charges '+q2(-ch)+' minus credits '+q2(er):'',(nc<=0?'−':'+')+q2(Math.abs(nc))+' · '+(g?pc(-nc/g):''),'tot');
     const net=rs.find(r=>r.kind==='net');if(net)line(net.line,net.note,q2(+net.amount),'tot');
     const tx=all.filter(t=>t.app===a&&t.period_from.slice(0,7)===cur&&t.amount);const paid=sum(tx,t=>+t.amount);
