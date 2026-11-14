@@ -133,6 +133,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}.tabs a[hidden]
 #mtbadge{font:600 .72rem var(--body);background:#fff;color:var(--brand);border-radius:999px;padding:4px 9px}
 #devp{position:fixed;inset:0;z-index:45;background:rgba(40,0,6,.55);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto}
 #devp[hidden],#devbtn[hidden],#devform[hidden]{display:none!important}
+#share-bar[hidden]{display:none!important}
 #devp .box{background:#fff;border-radius:16px;padding:18px 16px;width:100%;max-width:640px;display:flex;flex-direction:column;gap:10px}
 #devp h2{margin:0;font-size:1.1rem}
 #devp p{margin:0;color:var(--muted);font-size:.85rem}
@@ -146,7 +147,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}.tabs a[hidden]
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='202611141325';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='202611141329';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
