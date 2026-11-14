@@ -96,7 +96,7 @@ td.l{text-align:left}
 .pill.ok{background:#e3f4ee;color:#0d6b57}.pill.x{background:#fde4e5;color:#a8161e}.pill.p{background:#e8effc;color:#24529f}
 .more{font:600 .85rem var(--body);border:1px solid var(--line);background:#fff;color:var(--brand);border-radius:9px;padding:9px 14px;min-height:40px;margin-top:10px;cursor:pointer}
 .note{font-size:.76rem;color:var(--muted);margin:8px 0 0}
-td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}#b-alert{color:#a8161e;font-weight:500}
+td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}.tabs a[hidden]{display:none!important}#b-alert{color:#a8161e;font-weight:500}
 #b-own[hidden],#bm-card[hidden]{display:none!important}#b-own input{font:500 .9rem var(--body);padding:8px 10px;border:1px solid var(--line);border-radius:9px;min-height:38px}
 .btn{font:600 .85rem var(--body);background:var(--brand);color:#fff;border:0;border-radius:9px;padding:8px 16px;min-height:38px;cursor:pointer}
 #b-list input[type=checkbox]{width:20px;height:20px;accent-color:var(--brand)}
@@ -146,7 +146,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}#b-alert{color:
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='202611141245';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='202611141308';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
@@ -179,12 +179,14 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}#b-alert{color:
 })();
 </script>
 <div class="lock" id="cp" hidden><form id="cpf" autocomplete="on">
-  <h2>Set the password</h2>
-  <p class="note" style="margin:0">Choose the login email and password everyone will use. Nothing is changed until you send me the code below.</p>
+  <h2>Set a password</h2>
+  <select id="cp-who" aria-label="Which login"><option value="mgmt">Management login</option><option value="own">My owner login</option></select>
+  <p class="note" id="cp-note" style="margin:0">Choose the login email and password management will use. Nothing is changed until you send me the code below.</p>
   <input type="email" id="cp-em" name="username" autocomplete="username" placeholder="Login email" aria-label="Login email" required>
   <input type="password" id="cp-pw" name="new-password" autocomplete="new-password" placeholder="New password (8+ characters)" aria-label="New password" minlength="8" required>
   <input type="password" id="cp-pw2" autocomplete="new-password" placeholder="Type it again" aria-label="Type the new password again" minlength="8" required>
-  <button type="submit">Make code</button>
+  <input type="password" id="cp-code2" autocomplete="off" inputmode="numeric" placeholder="Owner code" aria-label="Owner code" hidden>
+  <button type="submit" id="cp-go">Make code</button>
   <p class="lerr" id="cp-err" role="alert"></p>
   <div id="cp-out" hidden style="display:flex;flex-direction:column;gap:8px">
     <p class="note" style="margin:0">Copy this code and send it to me in the chat. It does not contain your password. Once I put it on the website, the new password starts working.</p>
@@ -192,6 +194,16 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}#b-alert{color:
     <button type="button" id="cp-copy">Copy code</button>
   </div>
   <button type="button" id="cp-close" style="background:#fff;color:var(--brand);border:1px solid var(--line)">Close</button>
+</form></div>
+<div class="lock" id="setup" hidden><form id="setupf" autocomplete="on">
+  <img src="logo.png" alt="Sushinaa"><h2>Create your owner login</h2>
+  <p class="note" style="margin:0">This login sees everything: all months, payouts and bank. Management keeps their own login.</p>
+  <input type="email" id="su-em" name="username" autocomplete="username" placeholder="Your email" aria-label="Your email" required>
+  <input type="password" id="su-pw" name="new-password" autocomplete="new-password" placeholder="New password (8+ characters)" aria-label="New password" minlength="8" required>
+  <input type="password" id="su-pw2" autocomplete="new-password" placeholder="Type it again" aria-label="Type the password again" minlength="8" required>
+  <input type="password" id="su-code" autocomplete="off" inputmode="numeric" placeholder="Owner code" aria-label="Owner code" required>
+  <button type="submit" id="su-go">Create login</button>
+  <p class="lerr" id="su-err" role="alert"></p>
 </form></div>
 <div class="lock" id="lock"><form id="lockf" autocomplete="on">
   <img src="logo.png" alt="Sushinaa"><h2>Sushinaa Sales</h2>
@@ -386,10 +398,25 @@ const sum=(a,f)=>d3.sum(a,f);
 const inMonth=()=>rows.filter(r=>r.date.slice(0,7)===cur);
 
 // ---- Data is AES-GCM encrypted in enc/*.bin; the password unwraps the data key from key.json ----
-let DK=null,RAW=null;
+let DK=null,RAW=null,OK=null,ORAW=null;
+const ostore={get(){try{return localStorage.getItem('ok')}catch(e){return null}},set(v){try{localStorage.setItem('ok',v)}catch(e){}},del(){try{localStorage.removeItem('ok')}catch(e){}}};
+const OH2='bc9233c49b68b1a1df27f31de0afb4580c291f030f1e1d25647a10141e272b64';
+function markOwner(){try{localStorage.setItem('own',OH2)}catch(e){}}
+const B64=u=>btoa(String.fromCharCode(...u));
 const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 const store={get(){try{return localStorage.getItem('sk')}catch(e){return null}},set(v){try{localStorage.setItem('sk',v)}catch(e){}},del(){try{localStorage.removeItem('sk')}catch(e){}}};
 async function importDK(raw){return crypto.subtle.importKey('raw',raw,'AES-GCM',false,['decrypt'])}
+async function unwrapWith(k,em,pw){pw=em.trim().toLowerCase()+'\n'+pw;
+  const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
+  const kek=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(k.salt),iterations:k.iter,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);
+  return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(k.iv)},kek,b64(k.key)));
+}
+async function wrapWith(em,pw,raw){const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),it=600000;
+  const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(em.trim().toLowerCase()+'\n'+pw),'PBKDF2',false,['deriveKey']);
+  const kek=await crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:it,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt']);
+  return {v:1,iter:it,salt:B64(salt),iv:B64(iv),key:B64(new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},kek,raw)))}}
+const SBX=(f,b)=>fetch('https://grwwiimcawtqffeoyehu.supabase.co/rest/v1/rpc/'+f,{method:'POST',headers:{apikey:'sb_publishable_W_oiIsacJkrnhcTGxSPhKw_BBxfsWKz','Content-Type':'application/json'},body:JSON.stringify(b||{})}).then(r=>r.ok?r.json():null);
+async function setOwnerKeys(both){RAW=both.slice(0,32);ORAW=both.slice(32,64);DK=await importDK(RAW);OK=await importDK(ORAW);markOwner()}
 async function unwrap(em,pw){pw=em.trim().toLowerCase()+'\n'+pw;
   const k=await fetch('key.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.json());
   const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
@@ -397,17 +424,25 @@ async function unwrap(em,pw){pw=em.trim().toLowerCase()+'\n'+pw;
   return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(k.iv)},kek,b64(k.key)));
 }
 async function getEnc(path){
+  const key=OK?OK:DK;if(OK)path=path.replace('enc/','enc/o/');
   const buf=new Uint8Array(await fetch(path+'?v='+Date.now(),{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('missing');return r.arrayBuffer()}));
-  return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},DK,buf.slice(12)));
+  return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12)));
 }
 const encCsv=path=>getEnc(path).then(t=>d3.csvParse(t));
 function showLock(msg){if(window.__MT)return;$('lock').hidden=false;$('lerr').textContent=msg||'';setTimeout(()=>{try{($('em').value?$('pw'):$('em')).focus()}catch(e){}},50)}
-$('cpbtn').onclick=()=>{$('cp').hidden=false;$('cp-out').hidden=true;$('cp-err').textContent=''};
+$('cpbtn').onclick=()=>{$('cp').hidden=false;$('cp-out').hidden=true;$('cp-err').textContent='';cpWho()};
+function cpWho(){const own=$('cp-who').value==='own';$('cp-code2').hidden=!own;$('cp-code2').required=own;$('cp-go').textContent=own?'Save my new password':'Make code';
+  $('cp-note').textContent=own?'Choose your own email and password. It changes straight away.':'Choose the login email and password management will use. Nothing is changed until you send me the code below.'}
+$('cp-who').onchange=cpWho;
 $('cp-close').onclick=()=>{$('cp').hidden=true;['cp-pw','cp-pw2'].forEach(i=>$(i).value='')};
 $('cp-copy').onclick=async()=>{try{await navigator.clipboard.writeText($('cp-code').value);$('cp-copy').textContent='Copied'}catch(e){$('cp-code').select()}};
 $('cpf').onsubmit=async e=>{e.preventDefault();const em=$('cp-em').value.trim().toLowerCase(),a=$('cp-pw').value,b2=$('cp-pw2').value;
   if(a!==b2){$('cp-err').textContent='The two passwords are different.';return}
   if(!RAW){$('cp-err').textContent='Please lock and unlock once, then try again.';return}
+  if($('cp-who').value==='own'){if(!ORAW){$('cp-err').textContent='Only the owner login can do this.';return}
+    const both=new Uint8Array(64);both.set(RAW,0);both.set(ORAW,32);const w=await wrapWith(em,a,both);
+    const r=await SBX('sa_owner_wrap_set',{p_code:$('cp-code2').value.trim(),p_wrap:JSON.stringify(w)});
+    $('cp-err').textContent=r===true?'Done. Use the new password next time.':'Wrong owner code.';['cp-pw','cp-pw2','cp-code2'].forEach(i=>$(i).value='');return}
   const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),it=600000;
   const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(em+'\n'+a),'PBKDF2',false,['deriveKey']);
   const kek=await crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:it,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt']);
@@ -416,11 +451,22 @@ $('cpf').onsubmit=async e=>{e.preventDefault();const em=$('cp-em').value.trim().
   $('cp-code').value=JSON.stringify({v:1,iter:it,salt:B(salt),iv:B(iv),key:B(ct)});$('cp-out').hidden=false;$('cp-err').textContent='';$('cp-copy').textContent='Copy code';
   ['cp-pw','cp-pw2'].forEach(i=>$(i).value='')};
 $('lockf').onsubmit=async e=>{e.preventDefault();$('lerr').textContent='';$('unlock').disabled=true;$('unlock').textContent='Checking…';
-  try{const raw=await unwrap($('em').value,$('pw').value);RAW=raw;DK=await importDK(raw);if($('remember').checked)store.set(btoa(String.fromCharCode(...raw)));$('lock').hidden=true;$('pw').value='';start()}
-  catch(err){showLock('Wrong email or password. Please try again.')}
+  let ok=false;
+  try{const raw=await unwrap($('em').value,$('pw').value);RAW=raw;DK=await importDK(raw);if($('remember').checked)store.set(B64(raw));ok=true}catch(err){}
+  if(!ok){try{const w=await SBX('sa_owner_wrap_get');if(w){const both=await unwrapWith(JSON.parse(w),$('em').value,$('pw').value);await setOwnerKeys(both);if($('remember').checked){store.set(B64(RAW));ostore.set(B64(ORAW))}ok=true}}catch(err){}}
+  if(ok){$('lock').hidden=true;$('pw').value='';start()}else showLock('Wrong email or password. Please try again.');
   $('unlock').disabled=false;$('unlock').textContent='Unlock'};
-$('lockbtn').onclick=()=>{store.del();location.hash='';location.reload()};
-(async()=>{const sk=store.get();if(sk){try{RAW=b64(sk);DK=await importDK(RAW);$('lock').hidden=true;start();return}catch(e){store.del()}}showLock()})();
+$('lockbtn').onclick=()=>{store.del();ostore.del();location.hash='';location.reload()};
+(async()=>{const su=location.hash.match(/setup=([^&]+)/);
+  if(su){try{const both=b64(decodeURIComponent(su[1]));if(both.length===64){history.replaceState(null,'',location.pathname+location.search);window.__SETUP=both;$('lock').hidden=true;$('setup').hidden=false;$('su-em').focus();return}}catch(e){}}
+  const sk=store.get(),ok=ostore.get();if(sk){try{RAW=b64(sk);DK=await importDK(RAW);if(ok){ORAW=b64(ok);OK=await importDK(ORAW)}$('lock').hidden=true;start();return}catch(e){store.del();ostore.del()}}showLock()})();
+$('setupf').onsubmit=async e=>{e.preventDefault();const em=$('su-em').value.trim().toLowerCase(),a=$('su-pw').value;
+  if(a!==$('su-pw2').value){$('su-err').textContent='The two passwords are different.';return}
+  $('su-go').disabled=true;$('su-err').textContent='';
+  try{const w=await wrapWith(em,a,window.__SETUP);const r=await SBX('sa_owner_wrap_set',{p_code:$('su-code').value.trim(),p_wrap:JSON.stringify(w)});
+    if(r!==true){$('su-err').textContent='Wrong owner code.';$('su-go').disabled=false;return}
+    await setOwnerKeys(window.__SETUP);store.set(B64(RAW));ostore.set(B64(ORAW));try{sessionStorage.setItem('devc',$('su-code').value.trim())}catch(x){}
+    window.__SETUP=null;$('setup').hidden=true;start()}catch(x){$('su-err').textContent='Something went wrong. Please try again.';$('su-go').disabled=false}};
 let started=false;
 let PUBLIC_FROM='2026-10';
 async function start(){if(started)return;started=true;
@@ -524,7 +570,8 @@ let oLimit=100,iLimit=40;
 function curView(){return (location.hash||'#sales').slice(1)}
 async function showView(){
   if(!started||!cur)return;
-  const v=['sales','orders','cancelled','items','payouts','bank'].includes(curView())?curView():'sales';
+  const v=['sales','orders','cancelled','items'].concat(OK?['payouts','bank']:[]).includes(curView())?curView():'sales';
+  document.querySelectorAll('.tabs a[data-v=payouts],.tabs a[data-v=bank]').forEach(a=>a.hidden=!OK);$('cpbtn').hidden=!OK;
   document.querySelectorAll('.view').forEach(e=>e.hidden=e.id!=='view-'+v);
   document.querySelectorAll('.tabs a').forEach(a=>a.dataset.v===v?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
   if(v==='sales'){drawChart();return}
@@ -538,16 +585,16 @@ async function showView(){
 }
 let BK=null,BSEEN=null,BM=null;
 const SBU='https://grwwiimcawtqffeoyehu.supabase.co/rest/v1/rpc/',SBK='sb_publishable_W_oiIsacJkrnhcTGxSPhKw_BBxfsWKz';
-function shareBar(){const b=$('share-bar');if(!bOwn()||!cur||cur>='2026-10'){b.hidden=true;return}
+function shareBar(){const b=$('share-bar');if(!OK||!cur||cur>='2026-10'){b.hidden=true;return}
   const shown=cur>=PUBLIC_FROM,mn=M(P(cur+'-01'));b.hidden=false;
-  $('share-txt').textContent=shown?mn+' is visible to management.':'Only your devices can see '+mn+'. Management sees October onwards.';
+  $('share-txt').textContent=shown?mn+' is visible to management (changes reach them at the next hourly update).':'Only your owner login can see '+mn+'. Management sees '+M(P(PUBLIC_FROM+'-01'))+' onwards.';
   $('share-btn').textContent=shown?'Hide '+mn+' from management':'Show '+mn+' to management';$('share-code').hidden=!!bCode()}
 $('share-btn').onclick=async()=>{let c=bCode();if(!c){c=$('share-code').value.trim();if(!c){$('share-code').hidden=false;$('share-code').focus();return}}
   const shown=cur>=PUBLIC_FROM,nv=shown?'2026-10':cur;$('share-btn').disabled=true;
   const r=await sbc('sa_settings_set',{p_code:c,p_key:'public_from',p_value:nv}).then(r=>r.ok?r.json():false).catch(()=>false);$('share-btn').disabled=false;
   if(r===true){try{sessionStorage.setItem('devc',c)}catch(e){}$('share-code').value='';PUBLIC_FROM=nv;shareBar()}else{try{sessionStorage.removeItem('devc')}catch(e){}$('share-code').hidden=false;$('share-code').value='';$('share-code').placeholder='Wrong code'}};
 const sbc=(f,b)=>fetch(SBU+f,{method:'POST',headers:{apikey:SBK,Authorization:'Bearer '+SBK,'Content-Type':'application/json'},body:JSON.stringify(b||{})});
-const bOwn=()=>{try{return localStorage.getItem('own')==='bc9233c49b68b1a1df27f31de0afb4580c291f030f1e1d25647a10141e272b64'}catch(e){return false}};
+const bOwn=()=>{if(OK)return true;try{return localStorage.getItem('own')==='bc9233c49b68b1a1df27f31de0afb4580c291f030f1e1d25647a10141e272b64'}catch(e){return false}};
 const bCode=()=>{try{return sessionStorage.getItem('devc')}catch(e){return null}};
 const bKey=t=>t.app+'|'+(t.transfer_id||t.branch+'|'+t.period_from);
 const bDate=t=>t.app==='Rafeeq'?(t.bank_date||''):t.paid_date||'';
