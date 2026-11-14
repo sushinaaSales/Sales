@@ -146,7 +146,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}#b-alert{color:
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='202611141214';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='202611141237';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
@@ -163,7 +163,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}#b-alert{color:
 </div></div>
 <script>
 // Maintenance mode: maint.json {"on":true} shows "Under update" to everyone except devices unlocked with the owner code.
-(function(){var OH='21f5e5bd58019aa5401dacbe03631883891b666ee77230a26705e35860da3ab7',KEY='own';
+(function(){var OH='bc9233c49b68b1a1df27f31de0afb4580c291f030f1e1d25647a10141e272b64',KEY='own';
   function isOwn(){try{return localStorage.getItem(KEY)===OH}catch(e){return false}}
   async function sha(t){var b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,'0')}).join('')}
   async function tryCode(c){if(c&&await sha(c.trim())===OH){try{localStorage.setItem(KEY,OH)}catch(e){}return true}return false}
@@ -213,7 +213,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}#b-alert{color:
 </div></header>
 <script>
 // Device counter (owner-only view). Each browser gets a random id; we keep only a short device label and times.
-(function(){var U='https://grwwiimcawtqffeoyehu.supabase.co/rest/v1/rpc/',K='sb_publishable_W_oiIsacJkrnhcTGxSPhKw_BBxfsWKz',OH='21f5e5bd58019aa5401dacbe03631883891b666ee77230a26705e35860da3ab7';
+(function(){var U='https://grwwiimcawtqffeoyehu.supabase.co/rest/v1/rpc/',K='sb_publishable_W_oiIsacJkrnhcTGxSPhKw_BBxfsWKz',OH='bc9233c49b68b1a1df27f31de0afb4580c291f030f1e1d25647a10141e272b64';
   function own(){try{return localStorage.getItem('own')===OH}catch(e){return false}}
   function did(){try{var d=localStorage.getItem('did');if(!d){d=crypto.randomUUID?crypto.randomUUID():'10000000-1000-4000-8000-100000000000'.replace(/[018]/g,function(c){return(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16)});localStorage.setItem('did',d)}return d}catch(e){return null}}
   function label(){var u=navigator.userAgent,o=/iPhone/.test(u)?'iPhone':/iPad/.test(u)||(/Macintosh/.test(u)&&navigator.maxTouchPoints>1)?'iPad':/Android/.test(u)?(/Mobile/.test(u)?'Android phone':'Android tablet'):/Windows/.test(u)?'Windows PC':/Macintosh/.test(u)?'Mac':/Linux/.test(u)?'Linux':'Other';
@@ -534,7 +534,7 @@ async function showView(){
 let BK=null,BSEEN=null,BM=null;
 const SBU='https://grwwiimcawtqffeoyehu.supabase.co/rest/v1/rpc/',SBK='sb_publishable_W_oiIsacJkrnhcTGxSPhKw_BBxfsWKz';
 const sbc=(f,b)=>fetch(SBU+f,{method:'POST',headers:{apikey:SBK,Authorization:'Bearer '+SBK,'Content-Type':'application/json'},body:JSON.stringify(b||{})});
-const bOwn=()=>{try{return localStorage.getItem('own')==='21f5e5bd58019aa5401dacbe03631883891b666ee77230a26705e35860da3ab7'}catch(e){return false}};
+const bOwn=()=>{try{return localStorage.getItem('own')==='bc9233c49b68b1a1df27f31de0afb4580c291f030f1e1d25647a10141e272b64'}catch(e){return false}};
 const bCode=()=>{try{return sessionStorage.getItem('devc')}catch(e){return null}};
 const bKey=t=>t.app+'|'+(t.transfer_id||t.branch+'|'+t.period_from);
 const bDate=t=>t.app==='Rafeeq'?(t.bank_date||''):t.paid_date||'';
