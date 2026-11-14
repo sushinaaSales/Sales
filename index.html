@@ -298,7 +298,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}#b-alert{color:
     </section>
     <section class="card">
       <h2>Money received by app</h2>
-      <div class="wrap"><table><thead><tr><th>App</th><th>Received</th><th>Transfers</th><th>Our estimate</th><th>Difference</th><th>Waiting</th><th style="text-align:left">Paid how often</th></tr></thead><tbody id="b-app"></tbody></table></div>
+      <div class="wrap"><table><thead><tr><th>App</th><th>Received</th><th>Transfers</th><th>Waiting</th><th style="text-align:left">Paid how often</th></tr></thead><tbody id="b-app"></tbody></table></div>
       <p class="note" id="b-alert"></p>
     </section>
     <section class="card" id="bm-card">
@@ -310,8 +310,8 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}#b-alert{color:
       <h2>Every transfer</h2>
       <div class="filters"><select id="b-app-f" aria-label="App"><option value="">All apps</option></select><select id="b-scope" aria-label="Which"><option value="m">This month</option><option value="all">All months</option></select></div>
       <div id="b-own" class="filters" hidden><input id="b-code" type="password" placeholder="Owner code to tick transfers" autocomplete="off" style="flex:1;min-width:180px"><button type="button" id="b-code-ok" class="btn">OK</button></div>
-      <div class="wrap"><table><thead><tr><th>Date</th><th>App</th><th style="text-align:left">Branch</th><th style="text-align:left">For sales of</th><th>Amount</th><th>Our estimate</th><th>Difference</th><th style="text-align:left">Status</th><th style="text-align:left">In our bank</th><th>Seen in bank</th></tr></thead><tbody id="b-list"></tbody></table></div>
-      <p class="note">Amounts are what each app says it paid. Talabat pays every 2 to 3 days, Keeta every week per branch, Snoonu twice a month, Rafeeq twice a month. Rafeeq's statement shows no bank date, so its date is the day the statement was issued. Our estimate is the sum of our per-order payouts for the same dates. For Snoonu the gap is mostly the CPC/ranking fee and the 4% commission refund, which Snoonu settles in the second-half statement. Tick "Seen in bank" when you have matched a transfer on your bank statement.</p>
+      <div class="wrap"><table><thead><tr><th>Date</th><th>App</th><th style="text-align:left">Branch</th><th style="text-align:left">For sales of</th><th>Amount</th><th style="text-align:left">Status</th><th style="text-align:left">In our bank</th><th>Seen in bank</th></tr></thead><tbody id="b-list"></tbody></table></div>
+      <p class="note">Amounts are what each app says it paid. Talabat pays every 2 to 3 days, Keeta every week per branch, Snoonu twice a month, Rafeeq twice a month. Rafeeq's statement shows no bank date, so its date is the day the statement was issued. Tick "Seen in bank" when you have matched a transfer on your bank statement.</p>
     </section>
   </div>
   <div class="view" id="view-cancelled" hidden>
@@ -556,8 +556,7 @@ async function drawBank(){
   $('b4s').textContent=held.length?'QAR kept in the Keeta balance for '+[...new Set(held.map(t=>t.branch))].join(', ')+': no bank account linked':'nothing held';
   const freq={Snoonu:'Twice a month',Talabat:'Every 2 to 3 days',Keeta:'Weekly, per branch',Rafeeq:'Twice a month (statement)'};
   $('b-app').replaceChildren(...APPS.map(a=>{const xs=mx.filter(t=>t.app===a),es=xs.filter(t=>t.estimate!=='');const tr=document.createElement('tr');
-    td(tr,a);td(tr,q(sum(xs,t=>+t.amount)));td(tr,q(xs.length));td(tr,es.length?q(sum(es,t=>+t.estimate)):'—');
-    const df=es.length?sum(es,t=>+t.amount)-sum(es,t=>+t.estimate):null;td(tr,df===null?'—':(df>=0?'+':'−')+q(Math.abs(df)),df!==null&&Math.abs(df)>Math.max(200,.02*sum(es,t=>+t.estimate))?'bad':'');
+    td(tr,a);td(tr,q(sum(xs,t=>+t.amount)));td(tr,q(xs.length));
     td(tr,q(sum(wait.filter(t=>t.app===a),t=>+t.amount)));td(tr,freq[a],'l');return tr}));
   const al=[];held.length&&al.push('Keeta is holding money for '+[...new Set(held.map(t=>t.branch))].join(', ')+' because no bank account is linked to that store. Add one in Keeta (Financials > Balance > Add card) to get it paid.');
   all.filter(t=>t.status==='No statement in dashboard yet').forEach(t=>al.push(t.app+' has no statement yet for '+D(P(t.period_from))+' to '+D(P(t.period_to))+'.'));
@@ -569,8 +568,7 @@ async function drawBank(){
   const own=bOwn();$('b-own').hidden=!own||!!bCode();
   $('b-list').replaceChildren(...ls.map(t=>{const tr=document.createElement('tr');const d=bDate(t);
     td(tr,d?D(P(d)):'—');td(tr,t.app,'l');td(tr,t.branch,'l');td(tr,D(P(t.period_from))+(t.period_to!==t.period_from?' – '+D(P(t.period_to)):''),'l');
-    td(tr,t.amount?q2(+t.amount):'—');td(tr,t.estimate!==''?q2(+t.estimate):'—');
-    const df=t.estimate!==''&&t.amount?(+t.amount)-(+t.estimate):null;td(tr,df===null?'—':(df>=0?'+':'−')+q2(Math.abs(df)));
+    td(tr,t.amount?q2(+t.amount):'—');
     const st=td(tr,'','l');const pl=document.createElement('span');pl.className='pill '+(bPaid(t)?'ok':/Held|not/.test(t.status)?'x':'p');pl.textContent=t.app==='Rafeeq'&&bPaid(t)?'Statement issued':t.status.replace(/ \d{4}-\d\d-\d\d$/,'');st.append(pl);
     td(tr,t.bank_date?'Received '+D(P(t.bank_date))+(t.bank_amount&&Math.abs(+t.bank_amount-(+t.amount))>.5?' (QAR '+q2(+t.bank_amount)+')':''):(bPaid(t)?'Not matched yet':'—'),'l');
     const c=td(tr,'');const k=bKey(t);if(bPaid(t)){if(own&&bCode()){const cb=document.createElement('input');cb.type='checkbox';cb.checked=seen.has(k);cb.setAttribute('aria-label','Seen in bank');
