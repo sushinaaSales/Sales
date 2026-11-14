@@ -147,7 +147,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}.tabs a[hidden]
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='202611141333';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='202611141341';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
@@ -295,7 +295,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}.tabs a[hidden]
       <button type="button" class="more" id="o-more" hidden>Show more</button>
     </section>
   </div>
-  <div class="view" id="view-locked" hidden><section class="card" style="text-align:center;padding:40px 20px"><h2 id="lk-h" style="margin:0 0 8px">Not shared yet</h2><p id="lk-p" style="margin:0;color:var(--muted,#666)">This page will show here once it is shared.</p></section></div>
+  <div class="view" id="view-locked" hidden><section class="card" style="text-align:center;padding:40px 20px"><h2 id="lk-h" style="margin:0 0 8px">Work in progress</h2><p id="lk-p" style="margin:0;color:var(--muted,#666)">This section is being worked on in the back end. It will be available here soon.</p></section></div>
   <div class="view" id="view-bank" hidden>
     <section class="tiles">
       <div class="tile"><span class="lbl">Payable</span><span class="big" id="b2">—</span><span class="sub" id="b2s">QAR the apps owe for this month's sales</span></div>
@@ -582,7 +582,7 @@ async function showView(){
 let BK=null,BSEEN=null,BM=null;
 const SBU='https://grwwiimcawtqffeoyehu.supabase.co/rest/v1/rpc/',SBK='sb_publishable_W_oiIsacJkrnhcTGxSPhKw_BBxfsWKz';
 function locked(soon){document.querySelectorAll('.view').forEach(e=>e.hidden=e.id!=='view-locked');
-  $('lk-h').textContent=soon?'Coming soon':'Not shared yet';$('lk-p').textContent=soon?'This page has been shared and will show here after the next update (within an hour).':'This page will show here once it is shared.'}
+  $('lk-h').textContent='Work in progress';$('lk-p').textContent='This section is being worked on in the back end. It will be available here soon.'}
 function moneyBar(v){const b=$('money-bar');if(!OK||(v!=='payouts'&&v!=='bank')){b.hidden=true;return}b.hidden=false;
   $('money-txt').textContent=MONEY?'Management can see Payouts and Bank (from '+M(P(PUBLIC_FROM+'-01'))+'). Changes reach them at the next hourly update.':'Management sees the Payouts and Bank buttons but no data. Only you can see this page.';
   $('money-btn').textContent=MONEY?'Hide from management':'Show to management';$('money-code').hidden=!!bCode()}
