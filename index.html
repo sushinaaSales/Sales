@@ -142,7 +142,7 @@ td.l{text-align:left}
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='20261114001918';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='20261114002812';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
@@ -328,7 +328,7 @@ td.l{text-align:left}
       <h2>Charges and payout (QAR)</h2>
       <div class="seg" role="group" aria-label="Group by"><button type="button" id="p-app" aria-pressed="true">By app</button><button type="button" id="p-br" aria-pressed="false">By branch</button></div>
       <div class="filters"><select id="p-filter" aria-label="Filter"></select></div>
-      <div class="wrap"><table><thead><tr><th id="p-h">App</th><th>Food sales</th><th>Commission</th><th>Card fee</th><th>Pro delivery</th><th>Ads / CPC</th><th>S+</th><th>Promos you fund</th><th>Ops fees</th><th>Other</th><th>Total charges</th><th>Money back</th><th>Net payout</th><th>Kept</th></tr></thead><tbody id="p-body"></tbody></table></div>
+      <div class="wrap"><table><thead><tr><th id="p-h">App</th><th>Food sales</th><th>Commission</th><th>Card fee</th><th>Pro delivery</th><th>Ads / CPC</th><th>Placement</th><th>S+</th><th>Promos you fund</th><th>Ops fees</th><th>Other</th><th>Total charges</th><th>Money back</th><th>Net payout</th><th>Kept</th></tr></thead><tbody id="p-body"></tbody></table></div>
       <p class="note">Money back is what the app pays you on top, such as refunds for cancelled or problem orders. Net payout = food sales − total charges + money back.</p>
     </section>
     <section class="card">
@@ -540,11 +540,11 @@ $('o-q').oninput=()=>{oLimit=100;showView()};$('o-more').onclick=()=>{oLimit+=20
 $('c-branch').onchange=()=>showView();
 ['i-branch','i-app'].forEach(id=>$(id).onchange=()=>{iLimit=40;showView()});$('i-q').oninput=()=>showView();$('i-more').onclick=()=>{iLimit=1e6;showView()};
 let pBy='app';
-const CK=['commission','payment_fee','pro_fee','ads','splus','promos','ops','other'];
-const CL={commission:'Commission',payment_fee:'Card / online payment fee',pro_fee:'Pro delivery (loyalty) fee',ads:'Ads / CPC',splus:'S+ (Snoonu Plus) share',promos:'Promotions you fund',ops:'Operational fees and penalties',other:'Other adjustments',refunds:'Money back to you'};
+const CK=['commission','payment_fee','pro_fee','ads','placement','splus','promos','ops','other'];
+const CL={commission:'Commission',payment_fee:'Card / online payment fee',pro_fee:'Pro delivery (loyalty) fee',ads:'Ads / CPC',placement:'Premium placement fee',splus:'S+ (Snoonu Plus) share',promos:'Promotions you fund',ops:'Operational fees and penalties',other:'Other adjustments',refunds:'Money back to you'};
 const CX={
  Snoonu:{tag:'estimate',commission:'15% of sales. The statement shows 19%, and Snoonu pays the extra 4% back in the second-half statement (October: QAR 15,219).',payment_fee:'2.5% on card and wallet orders, not cash.',ads:'CPC / premium ranking, about 7% of sales, taken once a month in the second-half statement (October: QAR 24,000).',splus:'Your share of S+ free delivery, about 1.24% of sales (October: QAR 4,725).',note:'Snoonu numbers are worked out from these rates. Exact amounts come in the half-month statements.'},
- Talabat:{tag:'exact per order',commission:'Taken on every order (about '+'{c}'+' of sales).',payment_fee:'Fee on online-paid orders.',pro_fee:'Charged on talabat pro orders (free delivery for pro members), about QAR 5.5 to 7.5 per pro order.',ads:'Talabat ads.',promos:'Discounts and vouchers you fund.',ops:'Operational charges, wait time and avoidable cancellation fees.',refunds:'Refunds Talabat pays you for problem or cancelled orders.',note:'Orders Talabat has not settled yet use your average rates and are counted as estimates.'},
+ Talabat:{tag:'exact per order',commission:'Taken on every order (about '+'{c}'+' of sales).',payment_fee:'Fee on online-paid orders.',pro_fee:'Charged on talabat pro orders (free delivery for pro members), about QAR 5.5 to 7.5 per pro order.',ads:'Search CPC and keyword ads. Billed for the month, spread over orders by sales (October: QAR 5,694, 2.8% of sales).',placement:'Premium placement in the restaurant list. Billed for the month (October: QAR 2,855, 1.4% of sales).',promos:'Discounts and vouchers you fund.',ops:'Operational charges, wait time and avoidable cancellation fees.',refunds:'Refunds Talabat pays you for problem or cancelled orders.',note:'Commission, card fee and Pro delivery are exact per order. CPC and placement use the month total from Talabat Payments. Orders Talabat has not settled yet use your average rates.'},
  Keeta:{tag:'exact per order',commission:'Basic commission on every order (about {c} of sales).',payment_fee:'Fee on online-paid orders.',promos:'Promotions you fund: delivery fee discounts and vouchers.',ops:'Top-up to minimum order value.',refunds:'Paid to you for cancelled orders (compensation or food already made).'},
  Rafeeq:{tag:'estimate',commission:'19% of sales.',payment_fee:'About 2.6% on online-paid orders.',note:'Rafeeq charges no marketing or delivery fees.'}};
 function drawBreak(xs){
