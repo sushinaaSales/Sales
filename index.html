@@ -146,7 +146,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}#b-alert{color:
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='202611141203';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='202611141214';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
@@ -576,6 +576,9 @@ async function drawBank(){
     const c=td(tr,'');const k=bKey(t);if(bPaid(t)){if(own&&bCode()){const cb=document.createElement('input');cb.type='checkbox';cb.checked=seen.has(k);cb.setAttribute('aria-label','Seen in bank');
       cb.onchange=async()=>{cb.disabled=true;const r=await sbc('sa_bank_mark',{p_code:bCode(),p_id:k,p_on:cb.checked}).catch(()=>null);cb.disabled=false;if(r&&r.ok){cb.checked?seen.add(k):seen.delete(k)}else{cb.checked=!cb.checked;try{sessionStorage.removeItem('devc')}catch(e){}$('b-own').hidden=false}};c.append(cb)}else c.textContent=seen.has(k)?'✓':''}
     return tr}));
+  if(ls.length){const tr=document.createElement('tr');tr.className='tot';const pd=ls.filter(t=>+t.amount>0&&!/Held/.test(t.status)),bk=pd.filter(t=>t.bank_date);
+    td(tr,'Total');td(tr,'','l');td(tr,'','l');td(tr,pd.length+' payments','l');td(tr,q2(sum(pd,t=>+t.amount)));td(tr,'','l');
+    td(tr,bk.length?'In bank QAR '+q2(sum(bk,t=>+t.bank_amount||+t.amount))+(bk.length<pd.length?' · not yet QAR '+q2(sum(pd.filter(t=>!t.bank_date),t=>+t.amount)):''):'—','l');td(tr,'');$('b-list').append(tr)}
 }
 function drawBM(all,bm){
   const pc=d3.format('.1%'),box=$('bm');const ms=bm.filter(r=>r.month===cur);
