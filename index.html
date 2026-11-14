@@ -146,7 +146,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}#b-alert{color:
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='202611141200';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='202611141203';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
@@ -291,14 +291,14 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}#b-alert{color:
   </div>
   <div class="view" id="view-bank" hidden>
     <section class="tiles">
-      <div class="tile"><span class="lbl">Received</span><span class="big" id="b1">—</span><span class="sub" id="b1s">QAR paid into the bank this month</span></div>
-      <div class="tile"><span class="lbl">Transfers</span><span class="big" id="b2">—</span><span class="sub" id="b2s">this month</span></div>
-      <div class="tile"><span class="lbl">Waiting</span><span class="big" id="b3">—</span><span class="sub" id="b3s">QAR approved, not in bank yet</span></div>
+      <div class="tile"><span class="lbl">Payable</span><span class="big" id="b2">—</span><span class="sub" id="b2s">QAR the apps owe for this month's sales</span></div>
+      <div class="tile"><span class="lbl">In our bank</span><span class="big" id="b1">—</span><span class="sub" id="b1s">QAR found in our bank statement</span></div>
+      <div class="tile"><span class="lbl">Not in bank yet</span><span class="big" id="b3">—</span><span class="sub" id="b3s">QAR</span></div>
       <div class="tile"><span class="lbl">Held by app</span><span class="big" id="b4">—</span><span class="sub" id="b4s">QAR</span></div>
     </section>
     <section class="card">
-      <h2>Money received by app</h2>
-      <div class="wrap"><table><thead><tr><th>App</th><th>Received</th><th>Transfers</th><th>Waiting</th><th style="text-align:left">Paid how often</th></tr></thead><tbody id="b-app"></tbody></table></div>
+      <h2 id="b-h">Money for this month's sales</h2>
+      <div class="wrap"><table><thead><tr><th>App</th><th>Payable</th><th>In our bank</th><th>Not in bank yet</th><th style="text-align:left">Paid how often</th></tr></thead><tbody id="b-app"></tbody></table></div>
       <p class="note" id="b-alert"></p>
     </section>
     <section class="card" id="bm-card">
@@ -308,10 +308,10 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}#b-alert{color:
     </section>
     <section class="card">
       <h2>Every transfer</h2>
-      <div class="filters"><select id="b-app-f" aria-label="App"><option value="">All apps</option></select><select id="b-scope" aria-label="Which"><option value="m">This month</option><option value="all">All months</option></select></div>
+      <div class="filters"><select id="b-app-f" aria-label="App"><option value="">All apps</option></select><select id="b-scope" aria-label="Which"><option value="m">This month's sales</option><option value="all">October and November</option></select></div>
       <div id="b-own" class="filters" hidden><input id="b-code" type="password" placeholder="Owner code to tick transfers" autocomplete="off" style="flex:1;min-width:180px"><button type="button" id="b-code-ok" class="btn">OK</button></div>
       <div class="wrap"><table><thead><tr><th>Date</th><th>App</th><th style="text-align:left">Branch</th><th style="text-align:left">For sales of</th><th>Amount</th><th style="text-align:left">Status</th><th style="text-align:left">In our bank</th><th>Seen in bank</th></tr></thead><tbody id="b-list"></tbody></table></div>
-      <p class="note">Amounts are what each app says it paid. Talabat pays every 2 to 3 days, Keeta every week per branch, Snoonu twice a month, Rafeeq twice a month. Rafeeq pays by cheque, so it counts as received on the day the cheque was deposited in our bank. Tick "Seen in bank" when you have matched a transfer on your bank statement.</p>
+      <p class="note">Grouped by the sales month each payment is for, so money paid in early November for late-October sales counts under October. Amounts are what each app says it pays. Talabat pays every 2 to 3 days, Keeta every week per branch, Snoonu twice a month, Rafeeq twice a month. Rafeeq pays by cheque, so it counts as received on the day the cheque was deposited in our bank. Tick "Seen in bank" when you have matched a transfer on your bank statement.</p>
     </section>
   </div>
   <div class="view" id="view-cancelled" hidden>
@@ -543,28 +543,30 @@ async function drawBank(){
   if(!BK)BK=encCsv('enc/bank.bin').catch(()=>null);
   if(!BSEEN)BSEEN=sbc('sa_bank_seen_list').then(r=>r.ok?r.json():[]).then(a=>new Set(a.map(x=>x.id))).catch(()=>new Set());
   if(!BM)BM=encCsv('enc/bank_months.bin').catch(()=>[]);
-  const all=await BK,seen=await BSEEN,bm=(await BM)||[];
+  const all0=await BK,seen=await BSEEN,bm=(await BM)||[];const all=all0&&all0.filter(t=>t.period_to>='2026-10-01');
   if(!all){$('b-list').replaceChildren();$('b1').textContent='—';return}
   const fl=$('b-app-f');if(fl.options.length<2)APPS.forEach(a=>fl.append(new Option(a,a)));
-  const inM=t=>bDate(t).slice(0,7)===cur;
-  const mx=all.filter(t=>inM(t)&&bPaid(t));
-  const wait=all.filter(t=>+t.amount>0&&!bPaid(t)&&!/Held/.test(t.status)),held=all.filter(t=>/Held/.test(t.status));
-  $('b1').textContent=q(sum(mx,t=>+t.amount));$('b1s').textContent='QAR paid in '+M(P(cur+'-01'));
-  $('b2').textContent=q(mx.length);$('b2s').textContent=mx.length?'last on '+D(P(d3.max(mx,bDate))):'none yet this month';
-  $('b3').textContent=q(sum(wait,t=>+t.amount));$('b3s').textContent=wait.length?wait.map(t=>t.app+' '+D(P(t.period_from))+' to '+D(P(t.period_to))).join(', '):'nothing waiting';
+  // Grouped by the SALES month each payment is for (user, 2026-11-14). Only October 2026 onwards is shown.
+  const inM=t=>t.period_from.slice(0,7)===cur;
+  const held=all.filter(t=>inM(t)&&/Held/.test(t.status));
+  const due=all.filter(t=>inM(t)&&+t.amount>0&&!/Held/.test(t.status)),inb=due.filter(t=>t.bank_date),wait=due.filter(t=>!t.bank_date);
+  const mn=M(P(cur+'-01'));$('b-h').textContent='Money for '+mn+' sales';
+  $('b2').textContent=q(sum(due,t=>+t.amount));$('b2s').textContent='QAR the apps owe for '+mn+' sales ('+due.length+' payments)';
+  $('b1').textContent=q(sum(inb,t=>+t.bank_amount||+t.amount));$('b1s').textContent=inb.length?inb.length+' payments, last on '+D(P(d3.max(inb,t=>t.bank_date))):'none found yet';
+  $('b3').textContent=q(sum(wait,t=>+t.amount));$('b3s').textContent=wait.length?'QAR: '+[...d3.rollup(wait,v=>sum(v,t=>+t.amount),t=>t.app)].map(([a,v])=>a+' '+q(v)).join(', '):'everything is in the bank';
   $('b4').textContent=q(d3.sum(d3.groups(held,t=>t.branch),g=>d3.max(g[1],t=>+t.amount)?d3.sum(g[1],t=>+t.amount):0));
   $('b4s').textContent=held.length?'QAR kept in the Keeta balance for '+[...new Set(held.map(t=>t.branch))].join(', ')+': no bank account linked':'nothing held';
   const freq={Snoonu:'Twice a month',Talabat:'Every 2 to 3 days',Keeta:'Weekly, per branch',Rafeeq:'Twice a month, by cheque'};
-  $('b-app').replaceChildren(...APPS.map(a=>{const xs=mx.filter(t=>t.app===a),es=xs.filter(t=>t.estimate!=='');const tr=document.createElement('tr');
-    td(tr,a);td(tr,q(sum(xs,t=>+t.amount)));td(tr,q(xs.length));
-    td(tr,q(sum(wait.filter(t=>t.app===a),t=>+t.amount)));td(tr,freq[a],'l');return tr}));
+  $('b-app').replaceChildren(...APPS.map(a=>{const tr=document.createElement('tr');
+    const d=due.filter(t=>t.app===a);td(tr,a);td(tr,q(sum(d,t=>+t.amount)));td(tr,q(sum(d.filter(t=>t.bank_date),t=>+t.bank_amount||+t.amount)));
+    td(tr,q(sum(d.filter(t=>!t.bank_date),t=>+t.amount)));td(tr,freq[a],'l');return tr}));
   const al=[];held.length&&al.push('Keeta is holding money for '+[...new Set(held.map(t=>t.branch))].join(', ')+' because no bank account is linked to that store. Add one in Keeta (Financials > Balance > Add card) to get it paid.');
-  all.filter(t=>t.status==='No statement in dashboard yet').forEach(t=>al.push(t.app+' has no statement yet for '+D(P(t.period_from))+' to '+D(P(t.period_to))+'.'));
-  wait.filter(t=>t.app==='Snoonu').forEach(t=>al.push('Snoonu approved QAR '+q(+t.amount)+' for '+D(P(t.period_from))+' to '+D(P(t.period_to))+' but has not transferred it yet.'));
+  all.filter(t=>inM(t)&&t.status==='No statement in dashboard yet').forEach(t=>al.push(t.app+' has no statement yet for '+D(P(t.period_from))+' to '+D(P(t.period_to))+'.'));
+  wait.filter(t=>t.app==='Snoonu'&&/not transferred/.test(t.status)).forEach(t=>al.push('Snoonu approved QAR '+q(+t.amount)+' for '+D(P(t.period_from))+' to '+D(P(t.period_to))+' but has not transferred it yet.'));
   $('b-alert').textContent=al.join(' ');
   drawBM(all,bm);
   const af=fl.value,sc=$('b-scope').value;
-  const ls=all.filter(t=>(!af||t.app===af)&&(sc==='all'||inM(t)||!bPaid(t)));
+  const ls=all.filter(t=>(!af||t.app===af)&&(sc==='all'||inM(t)));
   const own=bOwn();$('b-own').hidden=!own||!!bCode();
   $('b-list').replaceChildren(...ls.map(t=>{const tr=document.createElement('tr');const d=bDate(t);
     td(tr,d?D(P(d)):'—');td(tr,t.app,'l');td(tr,t.branch,'l');td(tr,D(P(t.period_from))+(t.period_to!==t.period_from?' – '+D(P(t.period_to)):''),'l');
