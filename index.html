@@ -147,7 +147,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}.tabs a[hidden]
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='202611141341';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='202611141505';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
@@ -652,8 +652,8 @@ function drawBM(all,bm){
   box.replaceChildren(...APPS.filter(a=>ms.some(r=>r.app===a)).map(a=>{const rs=ms.filter(r=>r.app===a);const g=+((rs.find(r=>r.kind==='sales')||{}).amount||0);
     const c=document.createElement('div');c.className='pbc';const h=document.createElement('h3');h.textContent=a;const tg=document.createElement('span');tg.className='tag';tg.textContent='from statement';h.append(tg);c.append(h);
     const tb=document.createElement('table');const line=(l,ex,v,cls)=>{const tr=document.createElement('tr');if(cls)tr.className=cls;const x=document.createElement('td');x.textContent=l;if(ex){const e=document.createElement('span');e.className='ex';e.textContent=ex;x.append(e)}tr.append(x);td(tr,v);tb.append(tr)};
-    let ch=0;rs.forEach(r=>{const v=+r.amount;if(r.kind==='sales')line(r.line,r.note,q2(v));else if(r.kind==='earning')line(r.line,r.note,'+'+q2(v));else if(r.kind==='charge'){ch+=v;line(r.line,r.note,'−'+q2(-v)+' · '+(g?pc(-v/g):''))}});
-    line('Total charges','','−'+q2(-ch)+' · '+(g?pc(-ch/g):''),'tot');
+    let ch=0,er=0;rs.forEach(r=>{const v=+r.amount;if(r.kind==='sales')line(r.line,r.note,q2(v));else if(r.kind==='earning'){er+=v;line(r.line,r.note,(v>=0?'+':'−')+q2(Math.abs(v)))}else if(r.kind==='cash')line(r.line,r.note,'−'+q2(-v));else if(r.kind==='charge'){ch+=v;line(r.line,r.note,'−'+q2(-v)+' · '+(g?pc(-v/g):''))}});
+    const nc=ch+er;line(er?'Total charges (after credits)':'Total charges',er?'Charges '+q2(-ch)+' minus credits '+q2(er):'',(nc<=0?'−':'+')+q2(Math.abs(nc))+' · '+(g?pc(-nc/g):''),'tot');
     const net=rs.find(r=>r.kind==='net');if(net)line(net.line,net.note,q2(+net.amount),'tot');
     const tx=all.filter(t=>t.app===a&&t.period_from.slice(0,7)===cur&&t.amount);const paid=sum(tx,t=>+t.amount);
     const inb=tx.filter(t=>t.bank_date);
