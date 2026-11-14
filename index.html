@@ -146,7 +146,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}.tabs a[hidden]
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='202611141308';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='202611141322';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
@@ -156,26 +156,18 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}.tabs a[hidden]
   <img src="logo.png" alt="Sushinaa" id="mt-logo">
   <h2>Temporarily unavailable</h2>
   <p>Please check back later.</p>
-  <form id="mt-own" hidden style="display:flex;flex-direction:column;gap:8px">
-    <input type="password" id="mt-code" placeholder="Owner code" aria-label="Owner code" autocomplete="off">
-    <button type="submit">Open</button>
-  </form>
 </div></div>
 <script>
-// Maintenance mode: maint.json {"on":true} shows "Under update" to everyone except devices unlocked with the owner code.
-(function(){var OH='bc9233c49b68b1a1df27f31de0afb4580c291f030f1e1d25647a10141e272b64',KEY='own';
-  function isOwn(){try{return localStorage.getItem(KEY)===OH}catch(e){return false}}
-  async function sha(t){var b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,'0')}).join('')}
-  async function tryCode(c){if(c&&await sha(c.trim())===OH){try{localStorage.setItem(KEY,OH)}catch(e){}return true}return false}
-  var m=location.hash.match(/owner=([^&]+)/);
-  var ready=(m?tryCode(decodeURIComponent(m[1])).then(function(){history.replaceState(null,'',location.pathname+location.search)}):Promise.resolve());
-  ready.then(function(){return fetch('maint.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():{}})}).catch(function(){return {}}).then(function(j){
+// Maintenance mode: maint.json {"on":true} shows "Under update" to everyone except the owner login (remembered on this device).
+(function(){
+  function isOwn(){try{return !!localStorage.getItem('ok')}catch(e){return false}}
+  Promise.resolve().then(function(){return fetch('maint.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():{}})}).catch(function(){return {}}).then(function(j){
     var on=!!(j&&j.on);
     if(on&&!isOwn()){document.getElementById('mt').hidden=false;try{document.getElementById('lock').hidden=true}catch(e){}window.__MT=true}
     if(on&&isOwn()){var b=document.getElementById('mtbadge');if(b)b.hidden=false}
   });
-  var taps=0,tt=null;document.getElementById('mt-logo').addEventListener('click',function(){taps++;clearTimeout(tt);tt=setTimeout(function(){taps=0},2000);if(taps>=5){document.getElementById('mt-own').hidden=false;document.getElementById('mt-code').focus()}});
-  document.getElementById('mt-own').addEventListener('submit',async function(e){e.preventDefault();if(await tryCode(document.getElementById('mt-code').value))location.reload();else{document.getElementById('mt-code').value='';document.getElementById('mt-code').placeholder='Wrong code'}});
+  // Owner: tap the logo 5 times to get the login form; only the owner login gets past this screen.
+  var taps=0,tt=null;document.getElementById('mt-logo').addEventListener('click',function(){taps++;clearTimeout(tt);tt=setTimeout(function(){taps=0},2000);if(taps>=5){window.__MT=false;window.__MTLOGIN=true;document.getElementById('mt').hidden=true;document.getElementById('lock').hidden=false}});
 })();
 </script>
 <div class="lock" id="cp" hidden><form id="cpf" autocomplete="on">
@@ -236,7 +228,6 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}.tabs a[hidden]
   window.__saPing=function(login){var d=did();if(!d)return;call('sa_ping',{p_device:d,p_label:label(),p_owner:own(),p_login:!!login}).catch(function(){})};
   window.__saPing(false);
   var $=function(i){return document.getElementById(i)};
-  if(own())$('devbtn').hidden=false;
   function when(t){if(!t)return '—';var d=new Date(t);return d.toLocaleString('en-GB',{timeZone:'Asia/Qatar',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',hour12:true})}
   function esc(t){return String(t).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
   async function load(code){$('devmsg').textContent='Loading…';$('devlist').innerHTML='';
@@ -466,10 +457,10 @@ $('setupf').onsubmit=async e=>{e.preventDefault();const em=$('su-em').value.trim
   try{const w=await wrapWith(em,a,window.__SETUP);const r=await SBX('sa_owner_wrap_set',{p_code:$('su-code').value.trim(),p_wrap:JSON.stringify(w)});
     if(r!==true){$('su-err').textContent='Wrong owner code.';$('su-go').disabled=false;return}
     await setOwnerKeys(window.__SETUP);store.set(B64(RAW));ostore.set(B64(ORAW));try{sessionStorage.setItem('devc',$('su-code').value.trim())}catch(x){}
-    window.__SETUP=null;$('setup').hidden=true;start()}catch(x){$('su-err').textContent='Something went wrong. Please try again.';$('su-go').disabled=false}};
+    window.__SETUP=null;location.replace(location.pathname+'#sales');setTimeout(function(){location.reload()},50)}catch(x){$('su-err').textContent='Something went wrong. Please try again.';$('su-go').disabled=false}};
 let started=false;
 let PUBLIC_FROM='2026-10';
-async function start(){if(started)return;started=true;
+async function start(){if(window.__MTLOGIN&&!OK){store.del();$('mt').hidden=false;return}if(started)return;started=true;$('devbtn').hidden=!OK;
   try{const r=await fetch('https://grwwiimcawtqffeoyehu.supabase.co/rest/v1/rpc/sa_settings_get',{method:'POST',headers:{apikey:'sb_publishable_W_oiIsacJkrnhcTGxSPhKw_BBxfsWKz','Content-Type':'application/json'},body:'{}'});if(r.ok){const j=await r.json();if(j&&/^\d{4}-\d\d$/.test(j.public_from||''))PUBLIC_FROM=j.public_from}}catch(e){}try{window.__saPing&&window.__saPing(true)}catch(e){}
 Promise.all([
   encCsv('enc/sales_daily.bin'),
