@@ -146,7 +146,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}.tabs a[hidden]
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='202611141322';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='202611141325';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
@@ -443,7 +443,7 @@ $('cpf').onsubmit=async e=>{e.preventDefault();const em=$('cp-em').value.trim().
   ['cp-pw','cp-pw2'].forEach(i=>$(i).value='')};
 $('lockf').onsubmit=async e=>{e.preventDefault();$('lerr').textContent='';$('unlock').disabled=true;$('unlock').textContent='Checking…';
   let ok=false;
-  try{const raw=await unwrap($('em').value,$('pw').value);RAW=raw;DK=await importDK(raw);if($('remember').checked)store.set(B64(raw));ok=true}catch(err){}
+  try{const raw=await unwrap($('em').value,$('pw').value);RAW=raw;DK=await importDK(raw);OK=null;ORAW=null;ostore.del();if($('remember').checked)store.set(B64(raw));ok=true}catch(err){}
   if(!ok){try{const w=await SBX('sa_owner_wrap_get');if(w){const both=await unwrapWith(JSON.parse(w),$('em').value,$('pw').value);await setOwnerKeys(both);if($('remember').checked){store.set(B64(RAW));ostore.set(B64(ORAW))}ok=true}}catch(err){}}
   if(ok){$('lock').hidden=true;$('pw').value='';start()}else showLock('Wrong email or password. Please try again.');
   $('unlock').disabled=false;$('unlock').textContent='Unlock'};
