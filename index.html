@@ -78,8 +78,8 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--c2);outline-of
 .err{color:var(--warn);font-weight:600}
 
 /* Bottom tab bar: four views, thumb-reachable on phones */
-.tabs{position:fixed;left:0;right:0;bottom:0;z-index:5;background:#fff;box-shadow:0 -2px 12px rgba(90,0,8,.18);display:grid;grid-template-columns:repeat(5,1fr);padding-bottom:env(safe-area-inset-bottom,0px)}
-.tabs a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px 7px;font:500 .7rem var(--body);color:var(--muted);text-decoration:none;min-height:54px}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:5;background:#fff;box-shadow:0 -2px 12px rgba(90,0,8,.18);display:grid;grid-template-columns:repeat(6,1fr);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px 7px;font:500 .66rem var(--body);color:var(--muted);text-decoration:none;min-height:54px}
 .tabs a svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .tabs a[aria-current=page]{color:var(--brand)}
 .tabs a[aria-current=page] svg{stroke-width:2.2}
@@ -96,6 +96,10 @@ td.l{text-align:left}
 .pill.ok{background:#e3f4ee;color:#0d6b57}.pill.x{background:#fde4e5;color:#a8161e}.pill.p{background:#e8effc;color:#24529f}
 .more{font:600 .85rem var(--body);border:1px solid var(--line);background:#fff;color:var(--brand);border-radius:9px;padding:9px 14px;min-height:40px;margin-top:10px;cursor:pointer}
 .note{font-size:.76rem;color:var(--muted);margin:8px 0 0}
+td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}#b-alert{color:#a8161e;font-weight:500}
+#b-own[hidden]{display:none!important}#b-own input{font:500 .9rem var(--body);padding:8px 10px;border:1px solid var(--line);border-radius:9px;min-height:38px}
+.btn{font:600 .85rem var(--body);background:var(--brand);color:#fff;border:0;border-radius:9px;padding:8px 16px;min-height:38px;cursor:pointer}
+#b-list input[type=checkbox]{width:20px;height:20px;accent-color:var(--brand)}
 .pbg{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:8px}
 .pbc{border:1px solid var(--line);border-radius:12px;padding:12px 14px}
 .pbc h3{margin:0 0 2px;font-size:.95rem}.pbc .tag{font-size:.7rem;color:var(--muted);font-weight:400;margin-left:6px}
@@ -142,7 +146,7 @@ td.l{text-align:left}
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='20261114002812';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='20261114004425';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
@@ -285,6 +289,26 @@ td.l{text-align:left}
       <button type="button" class="more" id="o-more" hidden>Show more</button>
     </section>
   </div>
+  <div class="view" id="view-bank" hidden>
+    <section class="tiles">
+      <div class="tile"><span class="lbl">Received</span><span class="big" id="b1">—</span><span class="sub" id="b1s">QAR paid into the bank this month</span></div>
+      <div class="tile"><span class="lbl">Transfers</span><span class="big" id="b2">—</span><span class="sub" id="b2s">this month</span></div>
+      <div class="tile"><span class="lbl">Waiting</span><span class="big" id="b3">—</span><span class="sub" id="b3s">QAR approved, not in bank yet</span></div>
+      <div class="tile"><span class="lbl">Held by app</span><span class="big" id="b4">—</span><span class="sub" id="b4s">QAR</span></div>
+    </section>
+    <section class="card">
+      <h2>Money received by app</h2>
+      <div class="wrap"><table><thead><tr><th>App</th><th>Received</th><th>Transfers</th><th>Our estimate</th><th>Difference</th><th>Waiting</th><th style="text-align:left">Paid how often</th></tr></thead><tbody id="b-app"></tbody></table></div>
+      <p class="note" id="b-alert"></p>
+    </section>
+    <section class="card">
+      <h2>Every transfer</h2>
+      <div class="filters"><select id="b-app-f" aria-label="App"><option value="">All apps</option></select><select id="b-scope" aria-label="Which"><option value="m">This month</option><option value="all">All months</option></select></div>
+      <div id="b-own" class="filters" hidden><input id="b-code" type="password" placeholder="Owner code to tick transfers" autocomplete="off" style="flex:1;min-width:180px"><button type="button" id="b-code-ok" class="btn">OK</button></div>
+      <div class="wrap"><table><thead><tr><th>Date</th><th>App</th><th style="text-align:left">Branch</th><th style="text-align:left">For sales of</th><th>Amount</th><th>Our estimate</th><th>Difference</th><th style="text-align:left">Status</th><th>Seen in bank</th></tr></thead><tbody id="b-list"></tbody></table></div>
+      <p class="note">Amounts are what each app says it paid. Talabat pays every 2 to 3 days, Keeta every week per branch, Snoonu twice a month, Rafeeq twice a month. Rafeeq's statement shows no bank date, so its date is the day the statement was issued. Our estimate is the sum of our per-order payouts for the same dates. For Snoonu the gap is mostly the CPC/ranking fee and the 4% commission refund, which Snoonu settles in the second-half statement. Tick "Seen in bank" when you have matched a transfer on your bank statement.</p>
+    </section>
+  </div>
   <div class="view" id="view-cancelled" hidden>
     <section class="tiles">
       <div class="tile"><span class="lbl">Cancelled</span><span class="big" id="c1">—</span><span class="sub">orders</span></div>
@@ -344,6 +368,7 @@ td.l{text-align:left}
   <a href="#orders" data-v="orders"><svg viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>Orders</a>
   <a href="#cancelled" data-v="cancelled"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>Cancelled</a>
   <a href="#payouts" data-v="payouts"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 15h2"/></svg>Payouts</a>
+  <a href="#bank" data-v="bank"><svg viewBox="0 0 24 24"><path d="M3 10l9-6 9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"/></svg>Bank</a>
   <a href="#items" data-v="items"><svg viewBox="0 0 24 24"><path d="M3 11h18M5 11a7 7 0 0 0 14 0M9 7c0-2 1.5-3 3-3s3 1 3 3M12 4V2"/></svg>Items</a>
 </nav>
 <script>
@@ -489,10 +514,11 @@ let oLimit=100,iLimit=40;
 function curView(){return (location.hash||'#sales').slice(1)}
 async function showView(){
   if(!started||!cur)return;
-  const v=['sales','orders','cancelled','items','payouts'].includes(curView())?curView():'sales';
+  const v=['sales','orders','cancelled','items','payouts','bank'].includes(curView())?curView():'sales';
   document.querySelectorAll('.view').forEach(e=>e.hidden=e.id!=='view-'+v);
   document.querySelectorAll('.tabs a').forEach(a=>a.dataset.v===v?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
   if(v==='sales'){drawChart();return}
+  if(v==='bank'){drawBank();return}
   const os=await loadOrders(cur);
   const msg=v==='orders'?'o-count':v==='items'?'i-count':null;
   if(!os){if(msg)$(msg).textContent='Order details are not available for this month yet.';
@@ -500,6 +526,51 @@ async function showView(){
     return}
   if(v==='payouts')drawPayouts(os);if(v==='orders'){drawHours(os);drawOrders(os)}if(v==='cancelled')drawCancelled(os);if(v==='items')drawItems(os);
 }
+let BK=null,BSEEN=null;
+const SBU='https://grwwiimcawtqffeoyehu.supabase.co/rest/v1/rpc/',SBK='sb_publishable_W_oiIsacJkrnhcTGxSPhKw_BBxfsWKz';
+const sbc=(f,b)=>fetch(SBU+f,{method:'POST',headers:{apikey:SBK,Authorization:'Bearer '+SBK,'Content-Type':'application/json'},body:JSON.stringify(b||{})});
+const bOwn=()=>{try{return localStorage.getItem('own')==='21f5e5bd58019aa5401dacbe03631883891b666ee77230a26705e35860da3ab7'}catch(e){return false}};
+const bCode=()=>{try{return sessionStorage.getItem('devc')}catch(e){return null}};
+const bKey=t=>t.app+'|'+(t.transfer_id||t.branch+'|'+t.period_from);
+const bDate=t=>t.paid_date||((t.status.match(/issued (\d{4}-\d\d-\d\d)/)||[])[1])||'';
+const bPaid=t=>!!bDate(t)&&!/not transferred|Held/.test(t.status);
+async function drawBank(){
+  if(!BK)BK=encCsv('enc/bank.bin').catch(()=>null);
+  if(!BSEEN)BSEEN=sbc('sa_bank_seen_list').then(r=>r.ok?r.json():[]).then(a=>new Set(a.map(x=>x.id))).catch(()=>new Set());
+  const all=await BK,seen=await BSEEN;
+  if(!all){$('b-list').replaceChildren();$('b1').textContent='—';return}
+  const fl=$('b-app-f');if(fl.options.length<2)APPS.forEach(a=>fl.append(new Option(a,a)));
+  const inM=t=>bDate(t).slice(0,7)===cur;
+  const mx=all.filter(t=>inM(t)&&bPaid(t));
+  const wait=all.filter(t=>t.amount&&!bPaid(t)&&!/Held/.test(t.status)),held=all.filter(t=>/Held/.test(t.status));
+  $('b1').textContent=q(sum(mx,t=>+t.amount));$('b1s').textContent='QAR paid in '+M(P(cur+'-01'));
+  $('b2').textContent=q(mx.length);$('b2s').textContent=mx.length?'last on '+D(P(d3.max(mx,bDate))):'none yet this month';
+  $('b3').textContent=q(sum(wait,t=>+t.amount));$('b3s').textContent=wait.length?wait.map(t=>t.app+' '+D(P(t.period_from))+' to '+D(P(t.period_to))).join(', '):'nothing waiting';
+  $('b4').textContent=q(d3.sum(d3.groups(held,t=>t.branch),g=>d3.max(g[1],t=>+t.amount)?d3.sum(g[1],t=>+t.amount):0));
+  $('b4s').textContent=held.length?'QAR kept in the Keeta balance for '+[...new Set(held.map(t=>t.branch))].join(', ')+': no bank account linked':'nothing held';
+  const freq={Snoonu:'Twice a month',Talabat:'Every 2 to 3 days',Keeta:'Weekly, per branch',Rafeeq:'Twice a month (statement)'};
+  $('b-app').replaceChildren(...APPS.map(a=>{const xs=mx.filter(t=>t.app===a),es=xs.filter(t=>t.estimate!=='');const tr=document.createElement('tr');
+    td(tr,a);td(tr,q(sum(xs,t=>+t.amount)));td(tr,q(xs.length));td(tr,es.length?q(sum(es,t=>+t.estimate)):'—');
+    const df=es.length?sum(es,t=>+t.amount)-sum(es,t=>+t.estimate):null;td(tr,df===null?'—':(df>=0?'+':'−')+q(Math.abs(df)),df!==null&&Math.abs(df)>Math.max(200,.02*sum(es,t=>+t.estimate))?'bad':'');
+    td(tr,q(sum(wait.filter(t=>t.app===a),t=>+t.amount)));td(tr,freq[a],'l');return tr}));
+  const al=[];held.length&&al.push('Keeta is holding money for '+[...new Set(held.map(t=>t.branch))].join(', ')+' because no bank account is linked to that store. Add one in Keeta (Financials > Balance > Add card) to get it paid.');
+  all.filter(t=>t.status==='No statement in dashboard yet').forEach(t=>al.push(t.app+' has no statement yet for '+D(P(t.period_from))+' to '+D(P(t.period_to))+'.'));
+  wait.filter(t=>t.app==='Snoonu').forEach(t=>al.push('Snoonu approved QAR '+q(+t.amount)+' for '+D(P(t.period_from))+' to '+D(P(t.period_to))+' but has not transferred it yet.'));
+  $('b-alert').textContent=al.join(' ');
+  const af=fl.value,sc=$('b-scope').value;
+  const ls=all.filter(t=>(!af||t.app===af)&&(sc==='all'||inM(t)||!bPaid(t)));
+  const own=bOwn();$('b-own').hidden=!own||!!bCode();
+  $('b-list').replaceChildren(...ls.map(t=>{const tr=document.createElement('tr');const d=bDate(t);
+    td(tr,d?D(P(d)):'—');td(tr,t.app,'l');td(tr,t.branch,'l');td(tr,D(P(t.period_from))+(t.period_to!==t.period_from?' – '+D(P(t.period_to)):''),'l');
+    td(tr,t.amount?q2(+t.amount):'—');td(tr,t.estimate!==''?q2(+t.estimate):'—');
+    const df=t.estimate!==''&&t.amount?(+t.amount)-(+t.estimate):null;td(tr,df===null?'—':(df>=0?'+':'−')+q2(Math.abs(df)));
+    const st=td(tr,'','l');const pl=document.createElement('span');pl.className='pill '+(bPaid(t)?'ok':/Held|not/.test(t.status)?'x':'p');pl.textContent=t.app==='Rafeeq'&&bPaid(t)?'Statement issued':t.status.replace(/ \d{4}-\d\d-\d\d$/,'');st.append(pl);
+    const c=td(tr,'');const k=bKey(t);if(bPaid(t)){if(own&&bCode()){const cb=document.createElement('input');cb.type='checkbox';cb.checked=seen.has(k);cb.setAttribute('aria-label','Seen in bank');
+      cb.onchange=async()=>{cb.disabled=true;const r=await sbc('sa_bank_mark',{p_code:bCode(),p_id:k,p_on:cb.checked}).catch(()=>null);cb.disabled=false;if(r&&r.ok){cb.checked?seen.add(k):seen.delete(k)}else{cb.checked=!cb.checked;try{sessionStorage.removeItem('devc')}catch(e){}$('b-own').hidden=false}};c.append(cb)}else c.textContent=seen.has(k)?'✓':''}
+    return tr}));
+}
+$('b-app-f').onchange=()=>drawBank();$('b-scope').onchange=()=>drawBank();
+$('b-code-ok').onclick=async()=>{const v=$('b-code').value.trim();if(!v)return;const r=await sbc('sa_stats',{p_code:v}).catch(()=>null);if(r&&r.ok){try{sessionStorage.setItem('devc',v)}catch(e){}$('b-code').value='';drawBank()}else{$('b-code').value='';$('b-code').placeholder='Wrong code, try again'}};
 function drawOrders(os){
   const b=$('o-branch').value,a=$('o-app').value,st=$('o-status').value,qq=$('o-q').value.trim().toLowerCase();
   const f=os.filter(o=>(!b||o.branch===b)&&(!a||o.app===a)&&(!st||o.status===st)&&(!qq||o.order_id.includes(qq)||o.items.toLowerCase().includes(qq)));
