@@ -146,7 +146,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}#b-alert{color:
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='202611141237';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='202611141245';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
@@ -211,6 +211,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}#b-alert{color:
   <div class="brand"><img src="logo.png" alt="Sushinaa"><div><h1>Sushinaa Sales</h1><small>Delivery sales · all apps</small></div></div>
   <div style="display:flex;gap:8px;align-items:center"><span id="mtbadge" hidden title="Others see Temporarily unavailable">Paused for others</span><label><span class="visually-hidden" style="position:absolute;left:-9999px">Month</span><select id="month" aria-label="Month"></select></label><button type="button" class="lockbtn" id="devbtn" hidden>Devices</button><button type="button" class="lockbtn" id="cpbtn">Password</button><button type="button" class="lockbtn" id="lockbtn">Lock</button></div>
 </div></header>
+<div id="share-bar" hidden style="max-width:1200px;margin:10px auto 0;padding:10px 14px;border-radius:12px;background:#fff4d6;color:#5c4400;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:14px"><span id="share-txt" style="flex:1;min-width:200px"></span><input id="share-code" type="password" placeholder="Owner code" autocomplete="off" hidden style="width:120px"><button type="button" id="share-btn" class="btn"></button></div>
 <script>
 // Device counter (owner-only view). Each browser gets a random id; we keep only a short device label and times.
 (function(){var U='https://grwwiimcawtqffeoyehu.supabase.co/rest/v1/rpc/',K='sb_publishable_W_oiIsacJkrnhcTGxSPhKw_BBxfsWKz',OH='bc9233c49b68b1a1df27f31de0afb4580c291f030f1e1d25647a10141e272b64';
@@ -308,7 +309,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}#b-alert{color:
     </section>
     <section class="card">
       <h2>Every transfer</h2>
-      <div class="filters"><select id="b-app-f" aria-label="App"><option value="">All apps</option></select><select id="b-scope" aria-label="Which"><option value="m">This month's sales</option><option value="all">October and November</option></select></div>
+      <div class="filters"><select id="b-app-f" aria-label="App"><option value="">All apps</option></select><select id="b-scope" aria-label="Which"><option value="m">This month's sales</option><option value="all">All months shown</option></select></div>
       <div id="b-own" class="filters" hidden><input id="b-code" type="password" placeholder="Owner code to tick transfers" autocomplete="off" style="flex:1;min-width:180px"><button type="button" id="b-code-ok" class="btn">OK</button></div>
       <div class="wrap"><table><thead><tr><th>Date</th><th>App</th><th style="text-align:left">Branch</th><th style="text-align:left">For sales of</th><th>Amount</th><th style="text-align:left">Status</th><th style="text-align:left">In our bank</th><th>Seen in bank</th></tr></thead><tbody id="b-list"></tbody></table></div>
       <p class="note">Grouped by the sales month each payment is for, so money paid in early November for late-October sales counts under October. Amounts are what each app says it pays. Talabat pays every 2 to 3 days, Keeta every week per branch, Snoonu twice a month, Rafeeq twice a month. Rafeeq pays by cheque, so it counts as received on the day the cheque was deposited in our bank. Tick "Seen in bank" when you have matched a transfer on your bank statement.</p>
@@ -421,18 +422,22 @@ $('lockf').onsubmit=async e=>{e.preventDefault();$('lerr').textContent='';$('unl
 $('lockbtn').onclick=()=>{store.del();location.hash='';location.reload()};
 (async()=>{const sk=store.get();if(sk){try{RAW=b64(sk);DK=await importDK(RAW);$('lock').hidden=true;start();return}catch(e){store.del()}}showLock()})();
 let started=false;
-function start(){if(started)return;started=true;try{window.__saPing&&window.__saPing(true)}catch(e){}
+let PUBLIC_FROM='2026-10';
+async function start(){if(started)return;started=true;
+  try{const r=await fetch('https://grwwiimcawtqffeoyehu.supabase.co/rest/v1/rpc/sa_settings_get',{method:'POST',headers:{apikey:'sb_publishable_W_oiIsacJkrnhcTGxSPhKw_BBxfsWKz','Content-Type':'application/json'},body:'{}'});if(r.ok){const j=await r.json();if(j&&/^\d{4}-\d\d$/.test(j.public_from||''))PUBLIC_FROM=j.public_from}}catch(e){}try{window.__saPing&&window.__saPing(true)}catch(e){}
 Promise.all([
   encCsv('enc/sales_daily.bin'),
   fetch('updated.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null)
 ]).then(([r,u])=>{
   rows=r.map(x=>({date:x.date,branch:x.branch,app:x.app,orders:+x.orders,sales:+x.sales_qar}));
-  const months=[...new Set(rows.map(x=>x.date.slice(0,7)))].sort().reverse();
+  const allM=[...new Set(rows.map(x=>x.date.slice(0,7)))].sort().reverse();
+  // Months before public_from are visible only on owner devices (user rule 2026-11-14: September owner-only until the owner shares it).
+  const months=allM.filter(m=>bOwn()||m>=PUBLIC_FROM);
   cur=months[0];
   const sel=$('month');
   sel.replaceChildren(...months.map(m=>new Option(M(P(m+'-01')),m)));
   sel.value=cur;
-  sel.onchange=()=>{cur=sel.value;render();showView()};
+  sel.onchange=()=>{cur=sel.value;render();showView();shareBar()};shareBar();
   const a=$('asof');
   if(u&&u.at){
     const t=new Date(u.at),h=(Date.now()-t)/36e5;
@@ -533,6 +538,14 @@ async function showView(){
 }
 let BK=null,BSEEN=null,BM=null;
 const SBU='https://grwwiimcawtqffeoyehu.supabase.co/rest/v1/rpc/',SBK='sb_publishable_W_oiIsacJkrnhcTGxSPhKw_BBxfsWKz';
+function shareBar(){const b=$('share-bar');if(!bOwn()||!cur||cur>='2026-10'){b.hidden=true;return}
+  const shown=cur>=PUBLIC_FROM,mn=M(P(cur+'-01'));b.hidden=false;
+  $('share-txt').textContent=shown?mn+' is visible to management.':'Only your devices can see '+mn+'. Management sees October onwards.';
+  $('share-btn').textContent=shown?'Hide '+mn+' from management':'Show '+mn+' to management';$('share-code').hidden=!!bCode()}
+$('share-btn').onclick=async()=>{let c=bCode();if(!c){c=$('share-code').value.trim();if(!c){$('share-code').hidden=false;$('share-code').focus();return}}
+  const shown=cur>=PUBLIC_FROM,nv=shown?'2026-10':cur;$('share-btn').disabled=true;
+  const r=await sbc('sa_settings_set',{p_code:c,p_key:'public_from',p_value:nv}).then(r=>r.ok?r.json():false).catch(()=>false);$('share-btn').disabled=false;
+  if(r===true){try{sessionStorage.setItem('devc',c)}catch(e){}$('share-code').value='';PUBLIC_FROM=nv;shareBar()}else{try{sessionStorage.removeItem('devc')}catch(e){}$('share-code').hidden=false;$('share-code').value='';$('share-code').placeholder='Wrong code'}};
 const sbc=(f,b)=>fetch(SBU+f,{method:'POST',headers:{apikey:SBK,Authorization:'Bearer '+SBK,'Content-Type':'application/json'},body:JSON.stringify(b||{})});
 const bOwn=()=>{try{return localStorage.getItem('own')==='bc9233c49b68b1a1df27f31de0afb4580c291f030f1e1d25647a10141e272b64'}catch(e){return false}};
 const bCode=()=>{try{return sessionStorage.getItem('devc')}catch(e){return null}};
@@ -543,7 +556,7 @@ async function drawBank(){
   if(!BK)BK=encCsv('enc/bank.bin').catch(()=>null);
   if(!BSEEN)BSEEN=sbc('sa_bank_seen_list').then(r=>r.ok?r.json():[]).then(a=>new Set(a.map(x=>x.id))).catch(()=>new Set());
   if(!BM)BM=encCsv('enc/bank_months.bin').catch(()=>[]);
-  const all0=await BK,seen=await BSEEN,bm=(await BM)||[];const all=all0&&all0.filter(t=>t.period_to>='2026-10-01');
+  const all0=await BK,seen=await BSEEN,bm=(await BM)||[];const all=all0&&all0.filter(t=>t.period_to>=(bOwn()?'2026-09':PUBLIC_FROM)+'-01');
   if(!all){$('b-list').replaceChildren();$('b1').textContent='—';return}
   const fl=$('b-app-f');if(fl.options.length<2)APPS.forEach(a=>fl.append(new Option(a,a)));
   // Grouped by the SALES month each payment is for (user, 2026-11-14). Only October 2026 onwards is shown.
