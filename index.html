@@ -110,6 +110,9 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}.tabs a[hidden]
 #view-ideas .card{margin-bottom:12px}.ins{border-left:4px solid #2f6fde;background:#f6f8fd;border-radius:8px;padding:8px 10px;margin:0 0 8px}
 .ins.high{border-color:#d52029;background:#fdf1f2}.ins.medium{border-color:#e0a100;background:#fff9e6}.ins.good{border-color:#15967c;background:#eef8f5}
 .ins b{display:block;font-size:.88rem;margin-bottom:2px}.ins p{margin:0;font-size:.8rem;color:#3d3335;line-height:1.4}.ins .tg{font-size:.68rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.mnt{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px}.mnt button{border:1px solid var(--line,#e3dcdd);background:#fff;border-radius:16px;padding:5px 11px;font:inherit;font-size:.78rem;cursor:pointer}.mnt button.on{background:#d52029;border-color:#d52029;color:#fff}
+.mnf{display:flex;gap:6px;flex-wrap:wrap}.mnf select{font:inherit;font-size:.8rem;padding:4px 6px;border-radius:6px;border:1px solid var(--line,#e3dcdd);background:#fff}
+#mn-tbl td{white-space:normal}#mn-tbl td.l{min-width:110px}.mst{display:inline-block;font-size:.66rem;padding:1px 6px;border-radius:8px;margin:1px 2px 1px 0;white-space:nowrap}.mst.on{background:#e4f4ef;color:#0e6e5a}.mst.off{background:#fde7e8;color:#a8161e}.mst.hidden{background:#eee;color:#666}
 .heat td{text-align:center;font-size:.72rem;padding:5px 3px;border-radius:4px}.heat th{font-size:.66rem;padding:3px 2px;text-align:center;white-space:nowrap}.heat td:first-child{text-align:left;white-space:nowrap;font-weight:600}
 .tabs a{font-size:.6rem}
 .pbc tr.bdl{cursor:pointer}.pbc tr.bdl:hover td,.pbc tr.bdl:focus-visible td{background:var(--soft,rgba(0,0,0,.04))}.pbc .bda{display:inline-block;width:1em;color:var(--muted)}
@@ -157,7 +160,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}.tabs a[hidden]
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='202611142215';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='202611151127';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
@@ -360,6 +363,14 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}.tabs a[hidden]
       <div id="ins-top"></div>
     </section>
     <div id="ins-secs"></div>
+    <section class="card" id="mn-card" hidden>
+      <h2>Menu check</h2>
+      <p class="note" id="mn-sub" style="margin:0 0 10px"></p>
+      <div class="mnt" id="mn-tabs"><button type="button" data-t="ns" class="on">Not selling</button><button type="button" data-t="pr">Price differences</button><button type="button" data-t="un">Unavailable / hidden</button></div>
+      <div class="mnf" id="mn-f"></div>
+      <p class="note" id="mn-cnt" style="margin:6px 0"></p>
+      <div class="wrap" id="mn-tbl"></div>
+    </section>
   </div>
   <div class="view" id="view-items" hidden>
     <section class="card">
@@ -700,6 +711,52 @@ async function drawIdeas(){
     if(s.table&&s.table.rows.length){const w=el('div','wrap'),t=el('table'),th=el('thead'),hr=el('tr');s.table.head.forEach((h,i)=>{const x=el('th','',h);if(i>0&&i>=s.table.head.length-4&&!/App|Branch/.test(h))x.style.textAlign='right';hr.append(x)});th.append(hr);t.append(th);
       const tb=el('tbody');s.table.rows.forEach(r=>{const tr=el('tr');r.forEach((v,i)=>{const td=el('td',/^[-+]?[\d,.]+%?( min)?$|^-$/.test(v)?'':'l',v);if(/^-\d/.test(v)&&/%$/.test(v))td.style.color='#a8161e';tr.append(td)});tb.append(tr)});t.append(tb);w.append(t);c.append(w)}
     return c}));
+  drawMenu();
+}
+let MN=null,MNT='ns';
+async function drawMenu(){
+  if(!MN)MN=getEnc('enc/menu.bin').then(t=>JSON.parse(t)).catch(()=>null);
+  const j=await MN;$('mn-card').hidden=!j;if(!j)return;
+  const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
+  const MO=m=>new Date(m+'-01T00:00').toLocaleString('en-GB',{month:'short',year:'numeric'});
+  const SA=['Snoonu','Talabat','Keeta'];
+  $('mn-sub').textContent='Full menus from all four apps (checked '+j.pulled+'), matched with items sold since September. '+j.note;
+  document.querySelectorAll('#mn-tabs button').forEach(b=>{b.className=b.dataset.t===MNT?'on':'';b.onclick=()=>{MNT=b.dataset.t;drawMenu()}});
+  const f=$('mn-f');const keep={};f.querySelectorAll('select').forEach(x=>keep[x.id]=x.value);f.replaceChildren();
+  const sel=(id,opts)=>{const x=el('select');x.id=id;opts.forEach(([v,t])=>x.append(new Option(t,v)));if(keep[id]!=null&&[...x.options].some(o=>o.value===keep[id]))x.value=keep[id];x.onchange=()=>drawMenu();f.append(x);return x};
+  const st=(a)=>{const v=Object.values(a.branches);return v.includes('on')?'on':v.includes('off')?'off':'hidden'};
+  const chip=(t,c)=>el('span','mst '+c,t);
+  const tbl=(head,rows)=>{const t=el('table'),th=el('thead'),hr=el('tr');head.forEach(h=>hr.append(el('th','',h)));th.append(hr);t.append(th);const tb=el('tbody');rows.forEach(r=>{const tr=el('tr');r.forEach((v,i)=>{const td=el('td',i===0||typeof v!=='string'||!/^[\d,.]+$/.test(v)?'l':'');if(v instanceof Node)td.append(v);else if(Array.isArray(v))td.append(...v);else td.textContent=v;tr.append(td)});tb.append(tr)});t.append(tb);$('mn-tbl').replaceChildren(t)};
+  let rows=[];
+  if(MNT==='ns'){
+    const m=sel('mn-m',[['all','All months since Sep'],...j.months.map(x=>[x,MO(x)])]).value;
+    const ap=sel('mn-a',[['all','Snoonu, Talabat, Keeta'],...SA.map(a=>[a,a])]).value;
+    const lim=+sel('mn-l',[['0','Not sold at all'],['5','Sold 5 or fewer'],['15','Sold 15 or fewer']]).value;
+    const av=sel('mn-v',[['on','Can be ordered now'],['all','Including switched off']]).value;
+    const ms=m==='all'?j.months:[m];const apps=ap==='all'?SA:[ap];
+    j.items.forEach(it=>{const on=apps.filter(a=>it.apps[a]&&(av==='all'||st(it.apps[a])==='on'));if(!on.length)return;
+      const q=ms.reduce((s,x)=>s+apps.reduce((t,a)=>t+((it.sold[x]||{})[a]||0),0),0);if(q>lim)return;
+      const per=j.months.map(x=>String(apps.reduce((t,a)=>t+((it.sold[x]||{})[a]||0),0)));
+      rows.push([q,it.name,it.cat||'—',on.map(a=>chip(a+(st(it.apps[a])==='on'?'':st(it.apps[a])==='off'?' (off)':' (hidden)'),st(it.apps[a]))),...per])});
+    rows.sort((a,b)=>a[0]-b[0]||a[1].localeCompare(b[1]));
+    $('mn-cnt').textContent=rows.length+' items on the menu '+(lim?'sold '+lim+' or fewer times':'with no sales')+(m==='all'?' since September':' in '+MO(m))+(av==='on'?' that customers can order now (good candidates to remove)':'')+'. Green = can be ordered now; red = switched off or out of stock; grey = not listed.';
+    tbl(['Item','Category','On menu in',...j.months.map(MO)],rows.map(r=>r.slice(1)));
+  }else if(MNT==='pr'){
+    j.items.forEach(it=>{const sz=new Set();Object.values(it.apps).forEach(a=>Object.keys(a.sizes||{}).forEach(z=>sz.add(z)));
+      const lines=sz.size?[...sz].filter(z=>sz.has('8 pcs')?z==='8 pcs':true).map(z=>[z,a=>a.sizes&&a.sizes[z]]):[['',a=>Object.keys(a.sizes||{}).length?null:a.price]];
+      lines.forEach(([z,g])=>{const v=j.apps.map(a=>it.apps[a]?g(it.apps[a]):null);const u=new Set(v.filter(x=>x));
+        const bp=j.apps.filter(a=>it.apps[a]&&!z&&Object.keys(it.apps[a].branch_prices||{}).length);
+        if(u.size>1||bp.length)rows.push([it.name+(z?' · '+z:''),...v.map((x,i)=>{const a=it.apps[j.apps[i]];if(!x)return '—';let s='QAR '+x;if(!z&&a&&Object.keys(a.branch_prices||{}).length)s=Object.entries(a.branch_prices).map(([b,p])=>b+' '+p).join(', ');return s})])})});
+    $('mn-cnt').textContent=rows.length+' items with a different price between apps (or between branches of one app). Rolls are compared at 8 pieces; the other sizes follow the same pattern. Rafeeq roll sizes are not in its product list, so they show as —.';
+    tbl(['Item',...j.apps],rows);
+  }else{
+    const ap=sel('mn-a2',[['all','All apps'],...j.apps.map(a=>[a,a])]).value;
+    const ss=sel('mn-s',[['off','Off / out of stock'],['hidden','Not listed in some branches']]).value;
+    j.items.forEach(it=>{(ap==='all'?j.apps:[ap]).forEach(a=>{const x=it.apps[a];if(!x)return;const bs=j.branches.filter(b=>(x.branches[b]||'hidden')===ss);
+      if(!bs.length)return;if(ss==='hidden'&&bs.length===4)return;rows.push([it.name,a,bs.length===4?'All branches':bs.join(', '),it.cat||'—'])})});
+    $('mn-cnt').textContent=rows.length+(ss==='off'?' items switched off or out of stock.':' items missing from some branches on the same app.');
+    tbl(['Item','App',ss==='off'?'Off in':'Not listed in','Category'],rows);
+  }
 }
 function drawBM(all,bm,bd){
   const pc=d3.format('.1%'),box=$('bm');const ms=bm.filter(r=>r.month===cur);
