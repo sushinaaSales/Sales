@@ -146,6 +146,8 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}.tabs a[hidden]
 #mtbadge{font:600 .72rem var(--body);background:#fff;color:var(--brand);border-radius:999px;padding:4px 9px}
 #devp{position:fixed;inset:0;z-index:45;background:rgba(40,0,6,.55);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto}
 #devp[hidden],#devbtn[hidden],#devform[hidden]{display:none!important}
+body:not(.ownt) #devbtn,body:not(.ownt) #money-bar,body:not(.ownt) #share-bar,body:not(.ownt) #mtbadge{display:none!important}
+.brand{-webkit-tap-highlight-color:transparent;user-select:none}
 #share-bar[hidden],#money-bar[hidden]{display:none!important}
 #devp .box{background:#fff;border-radius:16px;padding:18px 16px;width:100%;max-width:640px;display:flex;flex-direction:column;gap:10px}
 #devp h2{margin:0;font-size:1.1rem}
@@ -160,7 +162,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}.tabs a[hidden]
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='202611151145';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='202611151341';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
@@ -896,5 +898,6 @@ $('h-app').onclick=()=>{hBy='app';$('h-app').setAttribute('aria-pressed','true')
 $('h-day').onchange=()=>showView();$('h-filter').onchange=()=>showView();
 window.addEventListener('hashchange',()=>{showView();window.scrollTo(0,0)});
 </script>
+<script>(function(){var n=0,t=null,b=document.querySelector('.brand');if(!b)return;b.addEventListener('click',function(){n++;clearTimeout(t);t=setTimeout(function(){n=0},1500);if(n>=3){n=0;document.body.classList.toggle('ownt')}})})();</script>
 </body>
 </html>
