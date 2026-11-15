@@ -162,7 +162,7 @@ body:not(.ownt) #devbtn,body:not(.ownt) #money-bar,body:not(.ownt) #share-bar,bo
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='202611151341';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='202611151655';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
@@ -404,7 +404,7 @@ body:not(.ownt) #devbtn,body:not(.ownt) #money-bar,body:not(.ownt) #share-bar,bo
       <div class="pbg" id="pb"></div>
     </section>
   </div>
-  <p class="foot">Food sales before app commission, without delivery fees or cancelled orders, from Snoonu, Talabat, Keeta and Rafeeq. Updated every hour. Dates are when the order was placed (Qatar time); the latest day is still in progress.</p>
+  <p class="foot">Food sales before app commission, without delivery fees or cancelled orders, from Snoonu, Talabat, Keeta and Rafeeq. Dates are when the order was placed (Qatar time); the latest day is still in progress.</p>
 </main>
 <nav class="tabs" aria-label="Sections">
   <a href="#sales" data-v="sales"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Sales</a>
@@ -416,7 +416,7 @@ body:not(.ownt) #devbtn,body:not(.ownt) #money-bar,body:not(.ownt) #share-bar,bo
   <a href="#items" data-v="items"><svg viewBox="0 0 24 24"><path d="M3 11h18M5 11a7 7 0 0 0 14 0M9 7c0-2 1.5-3 3-3s3 1 3 3M12 4V2"/></svg>Items</a>
 </nav>
 <script>
-const BR=['Downtown','Al Thumama','West Bay','Al Khor'],APPS=['Snoonu','Talabat','Keeta','Rafeeq'],COL=['var(--c1)','var(--c2)','var(--c3)','var(--c4)'];
+const BR=['Downtown','Al Thumama','West Bay','Al Khor'],APPS=['Snoonu','Talabat','Keeta','Rafeeq'],COL=['#2f6fde','#15967c','#1d3557','#8a8f98'],ACOL={Snoonu:'#d52029',Talabat:'#ff5a00',Keeta:'#f2c200',Rafeeq:'#7b2cbf'},CF=(k,i)=>ACOL[k]||COL[i];
 const q=d3.format(',.0f'),q2=d3.format(',.2f'),P=d3.utcParse('%Y-%m-%d'),D=d3.utcFormat('%a %-d %b'),M=d3.utcFormat('%B %Y');
 const $=id=>document.getElementById(id);
 let rows=[],cur=null,view='branch';
@@ -540,9 +540,9 @@ function render(){
     const tt=document.createElement('span');tt.className='br-total';tt.textContent=q(o.t);
     top.append(nm,tt);
     const bar=document.createElement('div');bar.className='bar';
-    APPS.forEach((a,j)=>{const s=document.createElement('span');s.style.width=(o.t?o[a]/o.t*100:0)+'%';s.style.background=COL[j];s.style.opacity=.85;bar.append(s)});
+    APPS.forEach((a,j)=>{const s=document.createElement('span');s.style.width=(o.t?o[a]/o.t*100:0)+'%';s.style.background=ACOL[a];bar.append(s)});
     const ap=document.createElement('div');ap.className='apps';
-    APPS.forEach(a=>{const c=document.createElement('span');const v=document.createElement('b');v.textContent=q(o[a]);c.append(v,a);ap.append(c)});
+    APPS.forEach(a=>{const c=document.createElement('span');const v=document.createElement('b');v.textContent=q(o[a]);const w=document.createElement('i');w.style.cssText='display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;vertical-align:middle;background:'+ACOL[a];c.append(v,w,a);ap.append(c)});
     const sub=document.createElement('div');sub.className='sub';sub.textContent=q(o.n)+' orders · share '+(S?Math.round(o.t/S*100):0)+'% · bar shows app split';
     d.append(top,bar,ap,sub);host.append(d);
   });
@@ -617,7 +617,7 @@ const SBU='https://grwwiimcawtqffeoyehu.supabase.co/rest/v1/rpc/',SBK='sb_publis
 function locked(soon){document.querySelectorAll('.view').forEach(e=>e.hidden=e.id!=='view-locked');
   $('lk-h').textContent='Work in progress';$('lk-p').textContent='This section is being worked on in the back end. It will be available here soon.'}
 function moneyBar(v){const b=$('money-bar');if(!OK||(v!=='payouts'&&v!=='bank')){b.hidden=true;return}b.hidden=false;
-  $('money-txt').textContent=MONEY?'Management can see Payouts and Bank (from '+M(P(PUBLIC_FROM+'-01'))+'). Changes reach them at the next hourly update.':'Management sees the Payouts and Bank buttons but no data. Only you can see this page.';
+  $('money-txt').textContent=MONEY?'Management can see Payouts and Bank (from '+M(P(PUBLIC_FROM+'-01'))+'). Changes reach them at the next data update.':'Management sees the Payouts and Bank buttons but no data. Only you can see this page.';
   $('money-btn').textContent=MONEY?'Hide from management':'Show to management';$('money-code').hidden=!!bCode()}
 $('money-btn').onclick=async()=>{let c=bCode();if(!c){c=$('money-code').value.trim();if(!c){$('money-code').hidden=false;$('money-code').focus();return}}
   const nv=MONEY?'off':'on';$('money-btn').disabled=true;
@@ -625,7 +625,7 @@ $('money-btn').onclick=async()=>{let c=bCode();if(!c){c=$('money-code').value.tr
   if(r===true){try{sessionStorage.setItem('devc',c)}catch(e){}$('money-code').value='';MONEY=nv==='on';moneyBar(curView())}else{try{sessionStorage.removeItem('devc')}catch(e){}$('money-code').hidden=false;$('money-code').value='';$('money-code').placeholder='Wrong code'}};
 function shareBar(){const b=$('share-bar');if(!OK||!cur||cur>='2026-10'){b.hidden=true;return}
   const shown=cur>=PUBLIC_FROM,mn=M(P(cur+'-01'));b.hidden=false;
-  $('share-txt').textContent=shown?mn+' is visible to management (changes reach them at the next hourly update).':'Only your owner login can see '+mn+'. Management sees '+M(P(PUBLIC_FROM+'-01'))+' onwards.';
+  $('share-txt').textContent=shown?mn+' is visible to management (changes reach them at the next data update).':'Only your owner login can see '+mn+'. Management sees '+M(P(PUBLIC_FROM+'-01'))+' onwards.';
   $('share-btn').textContent=shown?'Hide '+mn+' from management':'Show '+mn+' to management';$('share-code').hidden=!!bCode()}
 $('share-btn').onclick=async()=>{let c=bCode();if(!c){c=$('share-code').value.trim();if(!c){$('share-code').hidden=false;$('share-code').focus();return}}
   const shown=cur>=PUBLIC_FROM,nv=shown?'2026-10':cur;$('share-btn').disabled=true;
@@ -767,7 +767,7 @@ function drawBM(all,bm,bd){
   $('bm-card').hidden=!ms.length;if(!ms.length){box.replaceChildren();return}
   $('bm-sub').textContent='What each app charged for '+M(P(cur+'-01'))+' from its monthly statement, and whether the transfers add up to it.';
   box.replaceChildren(...APPS.filter(a=>ms.some(r=>r.app===a)).map(a=>{const rs=ms.filter(r=>r.app===a);const g=+((rs.find(r=>r.kind==='sales')||{}).amount||0);
-    const c=document.createElement('div');c.className='pbc';const h=document.createElement('h3');h.textContent=a;const tg=document.createElement('span');tg.className='tag';tg.textContent='from statement';h.append(tg);c.append(h);
+    const c=document.createElement('div');c.className='pbc';c.style.borderTop='4px solid '+ACOL[a];const h=document.createElement('h3');h.textContent=a;const tg=document.createElement('span');tg.className='tag';tg.textContent='from statement';h.append(tg);c.append(h);
     const tb=document.createElement('table');const line=(l,ex,v,cls,amt)=>{const tr=document.createElement('tr');if(cls)tr.className=cls;const x=document.createElement('td');x.textContent=l;if(ex){const e=document.createElement('span');e.className='ex';e.textContent=ex;x.append(e)}tr.append(x);td(tr,v);tb.append(tr);
       const dr=bd.filter(r=>r.app===a&&r.month===cur&&r.line===l);if(!dr.length)return;
       tr.classList.add('bdl');tr.tabIndex=0;tr.setAttribute('role','button');tr.setAttribute('aria-expanded','false');const ar=document.createElement('span');ar.className='bda';ar.textContent='▸';x.prepend(ar);
@@ -836,7 +836,7 @@ function drawBreak(xs){
   const pc=d3.format('.1%');const box=$('pb');const sub=$('p-filter').value;
   $('pb-sub').textContent=(pBy==='app'&&sub?sub:'All branches')+' · % is of that app\'s food sales';
   box.replaceChildren(...APPS.map(a=>{const ax=xs.filter(o=>o.app===a);const g=sum(ax,o=>o.status!=='Cancelled'?o.sales:0);
-    const c=document.createElement('div');c.className='pbc';const h=document.createElement('h3');h.textContent=a;const t=document.createElement('span');t.className='tag';t.textContent=(CX[a]||{}).tag||'';h.append(t);c.append(h);
+    const c=document.createElement('div');c.className='pbc';c.style.borderTop='4px solid '+ACOL[a];const h=document.createElement('h3');h.textContent=a;const t=document.createElement('span');t.className='tag';t.textContent=(CX[a]||{}).tag||'';h.append(t);c.append(h);
     const tb=document.createElement('table');let tot=0;const x=CX[a]||{};const cr=g?pc(sum(ax,o=>+o.commission)/g):'—';
     const line=(lab,ex,v,cls)=>{const tr=document.createElement('tr');if(cls)tr.className=cls;const l=document.createElement('td');l.textContent=lab;if(ex){const e=document.createElement('span');e.className='ex';e.textContent=ex.replace('{c}',cr);l.append(e)}tr.append(l);td(tr,v);tb.append(tr)};
     line('Food sales','',q(g));
@@ -877,14 +877,14 @@ function drawHours(os){
   xs.forEach(o=>{H[+o.time.slice(11,13)][o[fk]]+=1});
   H.forEach(r=>{keys.forEach(k=>r[k]/=div);r.total=d3.sum(keys,k=>r[k])});
   const fmt=div>1?d3.format('.1f'):q,lab=h=>String(h).padStart(2,'0')+':00';
-  $('h-legend').replaceChildren(...keys.map((b,i)=>{const s=document.createElement('span'),sw=document.createElement('i');sw.style.background=COL[i];s.append(sw,b);return s}));
+  $('h-legend').replaceChildren(...keys.map((b,i)=>{const s=document.createElement('span'),sw=document.createElement('i');sw.style.background=CF(b,i);s.append(sw,b);return s}));
   const el=$('h-chart');el.replaceChildren();
   const W=Math.max(260,el.clientWidth),Hh=220,m={t:10,r:6,b:24,l:34};
   const x=d3.scaleBand().domain(d3.range(24)).range([m.l,W-m.r]).padding(.15),y=d3.scaleLinear().domain([0,d3.max(H,r=>r.total)||1]).nice().range([Hh-m.b,m.t]);
   const svg=d3.select(el).append('svg').attr('width','100%').attr('viewBox',`0 0 ${W} ${Hh}`).attr('role','img').attr('aria-label','Orders by hour of day, stacked');
   svg.append('g').attr('class','grid').attr('transform',`translate(${m.l},0)`).call(d3.axisLeft(y).ticks(4).tickSize(-(W-m.l-m.r))).call(a=>a.select('.domain').remove());
   svg.append('g').attr('transform',`translate(0,${Hh-m.b})`).call(d3.axisBottom(x).tickSize(0).tickPadding(7).tickFormat(h=>h%3?'':String(h).padStart(2,'0'))).call(a=>a.select('.domain').remove());
-  svg.append('g').selectAll('g').data(d3.stack().keys(keys)(H)).join('g').style('fill',(s,i)=>COL[i]).selectAll('rect').data(s=>s).join('rect')
+  svg.append('g').selectAll('g').data(d3.stack().keys(keys)(H)).join('g').style('fill',(s,i)=>CF(s.key,i)).selectAll('rect').data(s=>s).join('rect')
     .attr('x',d=>x(d.data.h)).attr('width',x.bandwidth()).attr('y',d=>y(d[1])).attr('height',d=>Math.max(0,y(d[0])-y(d[1])));
   const tip=d3.select(el).append('div').attr('class','tip').style('display','none');
   svg.append('g').selectAll('rect').data(H).join('rect').attr('x',d=>x(d.h)-x.step()*.075).attr('width',x.step()).attr('y',m.t).attr('height',Hh-m.b-m.t).style('fill','transparent')
@@ -899,5 +899,6 @@ $('h-day').onchange=()=>showView();$('h-filter').onchange=()=>showView();
 window.addEventListener('hashchange',()=>{showView();window.scrollTo(0,0)});
 </script>
 <script>(function(){var n=0,t=null,b=document.querySelector('.brand');if(!b)return;b.addEventListener('click',function(){n++;clearTimeout(t);t=setTimeout(function(){n=0},1500);if(n>=3){n=0;document.body.classList.toggle('ownt')}})})();</script>
+<script>(function(){var C={Snoonu:'#d52029',Talabat:'#ff5a00',Keeta:'#f2c200',Rafeeq:'#7b2cbf'},t=null;function f(){t=null;document.querySelectorAll('th').forEach(function(h){var c=C[h.textContent.trim()],v=c?'inset 0 -3px 0 '+c:'';if(h.style.boxShadow!==v)h.style.boxShadow=v})}new MutationObserver(function(){if(!t)t=setTimeout(f,50)}).observe(document.body,{childList:true,subtree:true,characterData:true})})();</script>
 </body>
 </html>
