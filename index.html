@@ -160,7 +160,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}.tabs a[hidden]
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='202611151127';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='202611151145';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
@@ -724,7 +724,9 @@ async function drawMenu(){
   document.querySelectorAll('#mn-tabs button').forEach(b=>{b.className=b.dataset.t===MNT?'on':'';b.onclick=()=>{MNT=b.dataset.t;drawMenu()}});
   const f=$('mn-f');const keep={};f.querySelectorAll('select').forEach(x=>keep[x.id]=x.value);f.replaceChildren();
   const sel=(id,opts)=>{const x=el('select');x.id=id;opts.forEach(([v,t])=>x.append(new Option(t,v)));if(keep[id]!=null&&[...x.options].some(o=>o.value===keep[id]))x.value=keep[id];x.onchange=()=>drawMenu();f.append(x);return x};
-  const st=(a)=>{const v=Object.values(a.branches);return v.includes('on')?'on':v.includes('off')?'off':'hidden'};
+  const br=sel('mn-b',[['all','All branches'],...j.branches.map(b=>[b,b])]).value;
+  const st=(a)=>{if(br!=='all')return a.branches[br]||'hidden';const v=Object.values(a.branches);return v.includes('on')?'on':v.includes('off')?'off':'hidden'};
+  const sq=(it,x,a)=>{const o=((it.sold[x]||{})[a])||{};return br==='all'?Object.values(o).reduce((s,v)=>s+v,0):(o[br]||0)};
   const chip=(t,c)=>el('span','mst '+c,t);
   const tbl=(head,rows)=>{const t=el('table'),th=el('thead'),hr=el('tr');head.forEach(h=>hr.append(el('th','',h)));th.append(hr);t.append(th);const tb=el('tbody');rows.forEach(r=>{const tr=el('tr');r.forEach((v,i)=>{const td=el('td',i===0||typeof v!=='string'||!/^[\d,.]+$/.test(v)?'l':'');if(v instanceof Node)td.append(v);else if(Array.isArray(v))td.append(...v);else td.textContent=v;tr.append(td)});tb.append(tr)});t.append(tb);$('mn-tbl').replaceChildren(t)};
   let rows=[];
@@ -734,26 +736,26 @@ async function drawMenu(){
     const lim=+sel('mn-l',[['0','Not sold at all'],['5','Sold 5 or fewer'],['15','Sold 15 or fewer']]).value;
     const av=sel('mn-v',[['on','Can be ordered now'],['all','Including switched off']]).value;
     const ms=m==='all'?j.months:[m];const apps=ap==='all'?SA:[ap];
-    j.items.forEach(it=>{const on=apps.filter(a=>it.apps[a]&&(av==='all'||st(it.apps[a])==='on'));if(!on.length)return;
-      const q=ms.reduce((s,x)=>s+apps.reduce((t,a)=>t+((it.sold[x]||{})[a]||0),0),0);if(q>lim)return;
-      const per=j.months.map(x=>String(apps.reduce((t,a)=>t+((it.sold[x]||{})[a]||0),0)));
+    j.items.forEach(it=>{const on=apps.filter(a=>it.apps[a]&&(av==='all'?st(it.apps[a])!=='hidden':st(it.apps[a])==='on'));if(!on.length)return;
+      const q=ms.reduce((s,x)=>s+apps.reduce((t,a)=>t+sq(it,x,a),0),0);if(q>lim)return;
+      const per=j.months.map(x=>String(apps.reduce((t,a)=>t+sq(it,x,a),0)));
       rows.push([q,it.name,it.cat||'—',on.map(a=>chip(a+(st(it.apps[a])==='on'?'':st(it.apps[a])==='off'?' (off)':' (hidden)'),st(it.apps[a]))),...per])});
     rows.sort((a,b)=>a[0]-b[0]||a[1].localeCompare(b[1]));
-    $('mn-cnt').textContent=rows.length+' items on the menu '+(lim?'sold '+lim+' or fewer times':'with no sales')+(m==='all'?' since September':' in '+MO(m))+(av==='on'?' that customers can order now (good candidates to remove)':'')+'. Green = can be ordered now; red = switched off or out of stock; grey = not listed.';
+    $('mn-cnt').textContent=rows.length+' items on the menu '+(lim?'sold '+lim+' or fewer times':'with no sales')+(m==='all'?' since September':' in '+MO(m))+(br==='all'?'':' at '+br)+(av==='on'?' that customers can order now (good candidates to remove)':'')+'. Green = can be ordered now; red = switched off or out of stock; grey = not listed.';
     tbl(['Item','Category','On menu in',...j.months.map(MO)],rows.map(r=>r.slice(1)));
   }else if(MNT==='pr'){
     j.items.forEach(it=>{const sz=new Set();Object.values(it.apps).forEach(a=>Object.keys(a.sizes||{}).forEach(z=>sz.add(z)));
       const lines=sz.size?[...sz].filter(z=>sz.has('8 pcs')?z==='8 pcs':true).map(z=>[z,a=>a.sizes&&a.sizes[z]]):[['',a=>Object.keys(a.sizes||{}).length?null:a.price]];
       lines.forEach(([z,g])=>{const v=j.apps.map(a=>it.apps[a]?g(it.apps[a]):null);const u=new Set(v.filter(x=>x));
         const bp=j.apps.filter(a=>it.apps[a]&&!z&&Object.keys(it.apps[a].branch_prices||{}).length);
-        if(u.size>1||bp.length)rows.push([it.name+(z?' · '+z:''),...v.map((x,i)=>{const a=it.apps[j.apps[i]];if(!x)return '—';let s='QAR '+x;if(!z&&a&&Object.keys(a.branch_prices||{}).length)s=Object.entries(a.branch_prices).map(([b,p])=>b+' '+p).join(', ');return s})])})});
+        if(u.size>1||bp.length)rows.push([it.name+(z?' · '+z:''),...v.map((x,i)=>{const a=it.apps[j.apps[i]];if(!x)return '—';let s='QAR '+x;if(!z&&a&&Object.keys(a.branch_prices||{}).length)s=br!=='all'&&a.branch_prices[br]?'QAR '+a.branch_prices[br]:Object.entries(a.branch_prices).map(([b,p])=>b+' '+p).join(', ');if(br!=='all'&&a&&(a.branches[br]||'hidden')==='hidden')return '—';return s})])})});
     $('mn-cnt').textContent=rows.length+' items with a different price between apps (or between branches of one app). Rolls are compared at 8 pieces; the other sizes follow the same pattern. Rafeeq roll sizes are not in its product list, so they show as —.';
     tbl(['Item',...j.apps],rows);
   }else{
     const ap=sel('mn-a2',[['all','All apps'],...j.apps.map(a=>[a,a])]).value;
     const ss=sel('mn-s',[['off','Off / out of stock'],['hidden','Not listed in some branches']]).value;
-    j.items.forEach(it=>{(ap==='all'?j.apps:[ap]).forEach(a=>{const x=it.apps[a];if(!x)return;const bs=j.branches.filter(b=>(x.branches[b]||'hidden')===ss);
-      if(!bs.length)return;if(ss==='hidden'&&bs.length===4)return;rows.push([it.name,a,bs.length===4?'All branches':bs.join(', '),it.cat||'—'])})});
+    j.items.forEach(it=>{(ap==='all'?j.apps:[ap]).forEach(a=>{const x=it.apps[a];if(!x)return;const bs=j.branches.filter(b=>(br==='all'||b===br)&&(x.branches[b]||'hidden')===ss);
+      if(!bs.length)return;if(ss==='hidden'&&j.branches.every(b=>(x.branches[b]||'hidden')==='hidden'))return;rows.push([it.name,a,bs.length===4?'All branches':bs.join(', '),it.cat||'—'])})});
     $('mn-cnt').textContent=rows.length+(ss==='off'?' items switched off or out of stock.':' items missing from some branches on the same app.');
     tbl(['Item','App',ss==='off'?'Off in':'Not listed in','Category'],rows);
   }
