@@ -94,6 +94,7 @@ td.it{white-space:normal;text-align:left;min-width:220px;max-width:420px;color:v
 td.l{text-align:left}
 .cby{display:block;width:max-content;margin-top:3px;padding:1px 7px;border-radius:999px;background:#e3f4ee;color:#0d6b57;font-size:.66rem;font-weight:600;white-space:nowrap}
 .pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.72rem;font-weight:600}
+.rvt{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 10px}.rvt div{flex:1;min-width:130px;background:#f7f3f3;border-radius:10px;padding:8px 10px}.rvt b{display:block;font-size:1.15rem;font-family:var(--display)}.rvt span{font-size:.72rem;color:var(--muted)}#rv-list .pill{white-space:normal;border-radius:8px;min-width:140px;line-height:1.3;padding:3px 8px}#rv-list td{vertical-align:middle}#rv-list tr.mh td{background:#faf6f6;font-weight:700;font-size:.8rem}.pill.e{background:#fff3c4;color:#6b5200}
 .pill.ok{background:#e3f4ee;color:#0d6b57}.pill.x{background:#fde4e5;color:#a8161e}.pill.p{background:#e8effc;color:#24529f}
 .more{font:600 .85rem var(--body);border:1px solid var(--line);background:#fff;color:var(--brand);border-radius:9px;padding:9px 14px;min-height:40px;margin-top:10px;cursor:pointer}
 .note{font-size:.76rem;color:var(--muted);margin:8px 0 0}
@@ -162,7 +163,7 @@ body:not(.ownt) #devbtn,body:not(.ownt) #money-bar,body:not(.ownt) #share-bar,bo
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='202611151655';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='202611161225';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
@@ -322,6 +323,13 @@ body:not(.ownt) #devbtn,body:not(.ownt) #money-bar,body:not(.ownt) #share-bar,bo
       <h2 id="b-h">Money for this month's sales</h2>
       <div class="wrap"><table><thead><tr><th>App</th><th>Payable</th><th>In our bank</th><th>Not in bank yet</th><th style="text-align:left">Paid how often</th></tr></thead><tbody id="b-app"></tbody></table></div>
       <p class="note" id="b-alert"></p>
+    </section>
+    <section class="card" id="rv-card">
+      <h2>Receivable: money not in our bank yet</h2>
+      <div class="filters"><select id="rv-app" aria-label="App"><option value="">All apps</option></select></div>
+      <div class="rvt" id="rv-tot"></div>
+      <div class="wrap"><table><thead><tr><th style="text-align:left">For sales of</th><th>QAR</th><th style="text-align:left">Status</th><th style="text-align:left">App</th><th style="text-align:left">Branch</th></tr></thead><tbody id="rv-list"></tbody></table></div>
+      <p class="note">Every amount the apps still owe us, by the sales month it is for. "Statement not issued yet" and "Not billed yet" amounts are our estimate from the orders (sales minus the app's charges); the rest are the app's own figures. Something counts as received only when it is found in our bank statement.</p>
     </section>
     <section class="card" id="bm-card">
       <h2>Monthly statement check</h2>
@@ -663,6 +671,7 @@ async function drawBank(){
   all.filter(t=>inM(t)&&t.status==='No statement in dashboard yet').forEach(t=>al.push(t.app+' has no statement yet for '+D(P(t.period_from))+' to '+D(P(t.period_to))+'.'));
   wait.filter(t=>t.app==='Snoonu'&&/not transferred/.test(t.status)).forEach(t=>al.push('Snoonu approved QAR '+q(+t.amount)+' for '+D(P(t.period_from))+' to '+D(P(t.period_to))+' but has not transferred it yet.'));
   $('b-alert').textContent=al.join(' ');
+  drawRV(all0||[]);
   drawBM(all,bm,(await BD)||[]);
   const af=fl.value,sc=$('b-scope').value;
   const ls=all.filter(t=>(!af||t.app===af)&&(sc==='all'||inM(t)));
@@ -678,6 +687,41 @@ async function drawBank(){
   if(ls.length){const tr=document.createElement('tr');tr.className='tot';const pd=ls.filter(t=>+t.amount>0&&!/Held/.test(t.status)),bk=pd.filter(t=>t.bank_date);
     td(tr,'Total');td(tr,'','l');td(tr,'','l');td(tr,pd.length+' payments','l');td(tr,q2(sum(pd,t=>+t.amount)));td(tr,'','l');
     td(tr,bk.length?'In bank QAR '+q2(sum(bk,t=>+t.bank_amount||+t.amount))+(bk.length<pd.length?' · not yet QAR '+q2(sum(pd.filter(t=>!t.bank_date),t=>+t.amount)):''):'—','l');td(tr,'');$('b-list').append(tr)}
+}
+async function drawRV(rows){
+  const sel=$('rv-app');if(sel.options.length<2)APPS.forEach(a=>sel.append(new Option(a,a)));sel.onchange=()=>drawRV(rows);
+  const from=(bOwn()?'2026-09':PUBLIC_FROM)+'-01',today=d3.utcFormat('%Y-%m-%d')(new Date(Date.now()+3*3600e3)),af=sel.value;
+  const add=(d,n)=>d3.utcFormat('%Y-%m-%d')(d3.utcDay.offset(P(d),n));
+  const months=[];for(let m=from.slice(0,7);m<=today.slice(0,7);m=d3.utcFormat('%Y-%m')(d3.utcMonth.offset(P(m+'-01'),1)))months.push(m);
+  const OS=(await Promise.all(months.map(m=>loadOrders(m)))).flat().filter(Boolean);
+  const hasNet=OS.some(o=>o.net!==undefined&&o.net!=='');
+  const est=(a,b,f,t)=>hasNet?sum(OS.filter(o=>o.app===a&&(!b||b==='All branches'||o.branch===b)&&o.status!=='Cancelled'&&!String(o.order_id).startsWith('ADJ-')&&o.date>=f&&o.date<=t),o=>+o.net||0):null;
+  const out=[];
+  rows.filter(t=>t.period_to>=from&&!t.bank_date).forEach(t=>{
+    let amt=+t.amount||0,st,k='p';
+    if(/Closed/.test(t.status))return;
+    if(/No statement/.test(t.status)){amt=est(t.app,t.branch,t.period_from,t.period_to);st='Statement not issued yet';k='e'}
+    else if(amt<=0)return;
+    else if(/Held/.test(t.status)){st='Held in Keeta balance (no bank account linked)';k='x'}
+    else if(t.app==='Rafeeq'){st='Statement issued, cheque not deposited yet';k='x'}
+    else if(/review|not transferred/i.test(t.status)){st='Statement issued, not paid yet';k='p'}
+    else if(/progress/i.test(t.status)){st='Payment in progress';k='p'}
+    else{st=t.app+' says paid'+(t.paid_date?' '+D(P(t.paid_date)):'')+', not in our bank yet';k='x'}
+    out.push({app:t.app,branch:t.branch,f:t.period_from,t:t.period_to,amt,st,k})});
+  // days after each app's (Keeta: each branch's) last billed period: not billed yet
+  APPS.forEach(a=>{const rs=rows.filter(t=>t.app===a);const brs=a==='Keeta'?BR:['All branches'];
+    brs.forEach(b=>{const r2=rs.filter(t=>t.branch===b);if(!r2.length)return;const last=d3.max(r2,t=>t.period_to);if(last>=today)return;
+      let f=add(last,1);while(f<=today){const me=d3.utcFormat('%Y-%m-%d')(d3.utcDay.offset(d3.utcMonth.offset(P(f.slice(0,7)+'-01'),1),-1));const t=me<today?me:today;
+        const v=est(a,b,f,t);if(v===null||Math.abs(v)>=1)out.push({app:a,branch:b,f,t,amt:v,st:'Not billed yet (sales so far)',k:'e'});f=add(t,1)}})});
+  const ls=out.filter(r=>!af||r.app===af).sort((x,y)=>x.f<y.f?-1:x.f>y.f?1:APPS.indexOf(x.app)-APPS.indexOf(y.app));
+  const S=v=>sum(ls.filter(v),r=>r.amt||0);
+  const box=$('rv-tot');box.replaceChildren(...[['Total receivable',S(()=>true)],['Statement issued, not in bank',S(r=>r.k!=='e')],['Not issued / not billed yet (estimate)',S(r=>r.k==='e')]].map(([l,v])=>{const d=document.createElement('div');const b=document.createElement('b');b.textContent=q2(v);const sp=document.createElement('span');sp.textContent=l+' (QAR)';d.append(b,sp);return d}));
+  const tb=$('rv-list');tb.replaceChildren();
+  if(!ls.length){const tr=document.createElement('tr');const c=td(tr,'Nothing waiting: everything is in our bank.','l');c.colSpan=5;tb.append(tr);return}
+  d3.groups(ls,r=>r.f.slice(0,7)).forEach(([m,g])=>{const h=document.createElement('tr');h.className='mh';td(h,M(P(m+'-01'))+' sales','l');td(h,q2(sum(g,r=>r.amt||0)));td(h,'','l');td(h,'','l');td(h,'','l');tb.append(h);
+    g.forEach(r=>{const tr=document.createElement('tr');td(tr,D(P(r.f))+(r.t!==r.f?' – '+D(P(r.t)):''),'l');td(tr,r.amt===null?'—':q2(r.amt));const sc=td(tr,'','l');const pl=document.createElement('span');pl.className='pill '+r.k;pl.textContent=r.st;sc.append(pl);
+      const c=td(tr,'','l');const i=document.createElement('i');i.style.cssText='display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;background:'+ACOL[r.app];c.append(i,r.app);td(tr,r.branch,'l');tb.append(tr)})});
+  const tr=document.createElement('tr');tr.className='tot';td(tr,'Total','l');td(tr,q2(sum(ls,r=>r.amt||0)));td(tr,'','l');td(tr,'','l');td(tr,'','l');tb.append(tr);
 }
 function bdView(dr,amt){
   const w=document.createElement('div');w.className='bdw';const os=dr.filter(r=>r.kind==='o');
