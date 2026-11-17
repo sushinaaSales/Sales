@@ -163,7 +163,7 @@ body:not(.ownt) #devbtn,body:not(.ownt) #money-bar,body:not(.ownt) #share-bar,bo
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='202611161225';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='202611171437';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
@@ -679,7 +679,7 @@ async function drawBank(){
   $('b-list').replaceChildren(...ls.map(t=>{const tr=document.createElement('tr');const d=bDate(t);
     td(tr,d?D(P(d)):'—');td(tr,t.app,'l');td(tr,t.branch,'l');td(tr,D(P(t.period_from))+(t.period_to!==t.period_from?' – '+D(P(t.period_to)):''),'l');
     td(tr,t.amount?q2(+t.amount):'—');
-    const st=td(tr,'','l');const pl=document.createElement('span');pl.className='pill '+(bPaid(t)?'ok':/Held|not/.test(t.status)?'x':'p');pl.textContent=t.app==='Rafeeq'&&+t.amount>0?(bPaid(t)?'Cheque deposited':'Statement issued, cheque not deposited yet'):t.status.replace(/ \d{4}-\d\d-\d\d$/,'');st.append(pl);
+    const st=td(tr,'','l');const pl=document.createElement('span');pl.className='pill '+(bPaid(t)?'ok':/Held|not/.test(t.status)?'x':'p');pl.textContent=t.app==='Rafeeq'&&+t.amount>0?(/bounced/i.test(t.status)?t.status:bPaid(t)?'Cheque deposited':'Statement issued, cheque not deposited yet'):t.status.replace(/ \d{4}-\d\d-\d\d$/,'');st.append(pl);
     {const c=td(tr,t.bank_date?'Received '+D(P(t.bank_date))+(t.bank_amount&&Math.abs(+t.bank_amount-(+t.amount))>.5?' (QAR '+q2(+t.bank_amount)+')':''):(bPaid(t)?'Not matched yet':'—'),'l');if(t.bank_date){const g=document.createElement('span');g.className='cby';g.textContent='Confirmed by Faris';c.append(g)}}
     const c=td(tr,'');const k=bKey(t);if(bPaid(t)){if(own&&bCode()){const cb=document.createElement('input');cb.type='checkbox';cb.checked=seen.has(k);cb.setAttribute('aria-label','Seen in bank');
       cb.onchange=async()=>{cb.disabled=true;const r=await sbc('sa_bank_mark',{p_code:bCode(),p_id:k,p_on:cb.checked}).catch(()=>null);cb.disabled=false;if(r&&r.ok){cb.checked?seen.add(k):seen.delete(k)}else{cb.checked=!cb.checked;try{sessionStorage.removeItem('devc')}catch(e){}$('b-own').hidden=false}};c.append(cb)}else c.textContent=seen.has(k)?'✓':''}
@@ -703,7 +703,7 @@ async function drawRV(rows){
     if(/No statement/.test(t.status)){amt=est(t.app,t.branch,t.period_from,t.period_to);st='Statement not issued yet';k='e'}
     else if(amt<=0)return;
     else if(/Held/.test(t.status)){st='Held in Keeta balance (no bank account linked)';k='x'}
-    else if(t.app==='Rafeeq'){st='Statement issued, cheque not deposited yet';k='x'}
+    else if(t.app==='Rafeeq'){st=/bounced/i.test(t.status)?t.status:'Statement issued, cheque not deposited yet';k='x'}
     else if(/review|not transferred/i.test(t.status)){st='Statement issued, not paid yet';k='p'}
     else if(/progress/i.test(t.status)){st='Payment in progress';k='p'}
     else{st=t.app+' says paid'+(t.paid_date?' '+D(P(t.paid_date)):'')+', not in our bank yet';k='x'}
