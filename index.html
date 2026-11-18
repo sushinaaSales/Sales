@@ -163,7 +163,7 @@ body:not(.ownt) #devbtn,body:not(.ownt) #money-bar,body:not(.ownt) #share-bar,bo
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='202611171441';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='202611181139';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
@@ -189,7 +189,7 @@ body:not(.ownt) #devbtn,body:not(.ownt) #money-bar,body:not(.ownt) #share-bar,bo
 </script>
 <div class="lock" id="cp" hidden><form id="cpf" autocomplete="on">
   <h2>Set a password</h2>
-  <select id="cp-who" aria-label="Which login"><option value="mgmt">Management login</option><option value="own">My owner login</option></select>
+  <select id="cp-who" aria-label="Which login" hidden><option value="mgmt">Management login</option><option value="own">My owner login</option></select><div style="display:flex;gap:8px"><button type="button" id="cp-t-own" style="flex:1">My owner password</button><button type="button" id="cp-t-mgmt" style="flex:1">Management password</button></div>
   <p class="note" id="cp-note" style="margin:0">Choose the login email and password management will use. Nothing is changed until you send me the code below.</p>
   <input type="email" id="cp-em" name="username" autocomplete="username" placeholder="Login email" aria-label="Login email" required>
   <input type="password" id="cp-pw" name="new-password" autocomplete="new-password" placeholder="New password (8+ characters)" aria-label="New password" minlength="8" required>
@@ -464,10 +464,12 @@ async function getEnc(path){
 }
 const encCsv=path=>getEnc(path).then(t=>d3.csvParse(t));
 function showLock(msg){if(window.__MT)return;$('lock').hidden=false;$('lerr').textContent=msg||'';setTimeout(()=>{try{($('em').value?$('pw'):$('em')).focus()}catch(e){}},50)}
-$('cpbtn').onclick=()=>{$('cp').hidden=false;$('cp-out').hidden=true;$('cp-err').textContent='';cpWho()};
+$('cpbtn').onclick=()=>{$('cp').hidden=false;$('cp-out').hidden=true;$('cp-err').textContent='';cpPick('own')};
 function cpWho(){const own=$('cp-who').value==='own';$('cp-code2').hidden=!own;$('cp-code2').required=own;$('cp-go').textContent=own?'Save my new password':'Make code';
   $('cp-note').textContent=own?'Choose your own email and password. It changes straight away.':'Choose the login email and password management will use. Nothing is changed until you send me the code below.'}
 $('cp-who').onchange=cpWho;
+function cpPick(v){$('cp-who').value=v;[['own','cp-t-own'],['mgmt','cp-t-mgmt']].forEach(([k,id])=>{const b=$(id),on=k===v;b.style.background=on?'var(--brand)':'transparent';b.style.color=on?'#fff':'inherit';b.style.border='1px solid var(--brand)'});cpWho()}
+$('cp-t-own').onclick=()=>cpPick('own');$('cp-t-mgmt').onclick=()=>cpPick('mgmt');
 $('cp-close').onclick=()=>{$('cp').hidden=true;['cp-pw','cp-pw2'].forEach(i=>$(i).value='')};
 $('cp-copy').onclick=async()=>{try{await navigator.clipboard.writeText($('cp-code').value);$('cp-copy').textContent='Copied'}catch(e){$('cp-code').select()}};
 $('cpf').onsubmit=async e=>{e.preventDefault();const em=$('cp-em').value.trim().toLowerCase(),a=$('cp-pw').value,b2=$('cp-pw2').value;
