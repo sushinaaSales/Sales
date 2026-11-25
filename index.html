@@ -136,7 +136,7 @@ td.bad{color:#b3121b;font-weight:600}#b-alert:empty{display:none}.tabs a[hidden]
 .lock .lerr{color:var(--brand-dark);font-size:.85rem;min-height:1.2em;margin:0}
 .lockbtn{font:500 .78rem var(--body);background:transparent;border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:8px;padding:6px 10px;min-height:34px;cursor:pointer}
 /* Maintenance screen: shown to everyone except owner devices while maint.json says on */
-#mt{position:fixed;inset:0;z-index:40;background:var(--brand);display:flex;align-items:center;justify-content:center;padding:24px 16px}
+#mt{position:fixed;inset:0;z-index:40;background:#fff;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;padding:24px 16px}
 #mt[hidden],#mt-own[hidden],#mtbadge[hidden]{display:none!important}
 #mt .box{background:#fff;border-radius:16px;box-shadow:0 8px 30px rgba(90,0,8,.3);padding:26px 20px;width:100%;max-width:340px;text-align:center;display:flex;flex-direction:column;gap:12px}
 #mt img{width:84px;height:84px;margin:0 auto;border-radius:16px;cursor:default;-webkit-tap-highlight-color:transparent}
@@ -163,17 +163,13 @@ body:not(.ownt) #devbtn,body:not(.ownt) #money-bar,body:not(.ownt) #share-bar,bo
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='202611251734';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='202611251740';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
 </head>
 <body>
-<div id="mt" hidden><div class="box">
-  <img src="logo.png" alt="Sushinaa" id="mt-logo">
-  <h2>Data connection error</h2>
-  <p>Data access from Drive is not fetching, and the app APIs (Snoonu, Talabat, Keeta, Rafeeq) are blocked. Sales data cannot be loaded right now.</p>
-</div></div>
+<div id="mt" hidden></div>
 <script>
 // Maintenance mode: maint.json {"on":true} shows "Under update" to everyone except the owner login (remembered on this device).
 (function(){
@@ -183,8 +179,8 @@ body:not(.ownt) #devbtn,body:not(.ownt) #money-bar,body:not(.ownt) #share-bar,bo
     if(on&&!isOwn()){document.getElementById('mt').hidden=false;try{document.getElementById('lock').hidden=true}catch(e){}window.__MT=true}
     if(on&&isOwn()){var b=document.getElementById('mtbadge');if(b)b.hidden=false}
   });
-  // Owner: tap the logo 5 times to get the login form; only the owner login gets past this screen.
-  var taps=0,tt=null;document.getElementById('mt-logo').addEventListener('click',function(){taps++;clearTimeout(tt);tt=setTimeout(function(){taps=0},2000);if(taps>=5){window.__MT=false;window.__MTLOGIN=true;document.getElementById('mt').hidden=true;document.getElementById('lock').hidden=false}});
+  // Owner: tap anywhere on the blank screen 5 times to get the login form; only the owner login gets past this screen.
+  var taps=0,tt=null;document.getElementById('mt').addEventListener('click',function(){taps++;clearTimeout(tt);tt=setTimeout(function(){taps=0},2000);if(taps>=5){window.__MT=false;window.__MTLOGIN=true;document.getElementById('mt').hidden=true;document.getElementById('lock').hidden=false}});
 })();
 </script>
 <div class="lock" id="cp" hidden><form id="cpf" autocomplete="on">
