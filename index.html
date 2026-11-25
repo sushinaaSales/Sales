@@ -163,7 +163,7 @@ body:not(.ownt) #devbtn,body:not(.ownt) #money-bar,body:not(.ownt) #share-bar,bo
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='202611251746';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='202611252110';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
@@ -505,7 +505,7 @@ async function start(){if(window.__MTLOGIN&&!OK){store.del();$('mt').hidden=fals
   try{const r=await fetch('https://grwwiimcawtqffeoyehu.supabase.co/rest/v1/rpc/sa_settings_get',{method:'POST',headers:{apikey:'sb_publishable_W_oiIsacJkrnhcTGxSPhKw_BBxfsWKz','Content-Type':'application/json'},body:'{}'});if(r.ok){const j=await r.json();if(j&&/^\d{4}-\d\d$/.test(j.public_from||''))PUBLIC_FROM=j.public_from;MONEY=!!(j&&j.money_shared==='on')}}catch(e){}try{window.__saPing&&window.__saPing(true)}catch(e){}
 Promise.all([
   encCsv('enc/sales_daily.bin'),
-  fetch('updated.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null)
+  fetch((OK?'updated.json':'updated_m.json')+'?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null)
 ]).then(([r,u])=>{
   rows=r.map(x=>({date:x.date,branch:x.branch,app:x.app,orders:+x.orders,sales:+x.sales_qar}));
   const allM=[...new Set(rows.map(x=>x.date.slice(0,7)))].sort().reverse();
