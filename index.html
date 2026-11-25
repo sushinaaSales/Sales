@@ -163,7 +163,7 @@ body:not(.ownt) #devbtn,body:not(.ownt) #money-bar,body:not(.ownt) #share-bar,bo
 </style>
 <script>
 // Self-update: phones keep an old copy of this page for a while; reload once when a newer version is published.
-(function(){var B='202611181139';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+(function(){var B='202611251734';fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
   if(j&&j.build&&j.build!==B){var k='rl-'+j.build;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}
     location.reload()}}).catch(function(){})})();
 </script>
@@ -171,8 +171,8 @@ body:not(.ownt) #devbtn,body:not(.ownt) #money-bar,body:not(.ownt) #share-bar,bo
 <body>
 <div id="mt" hidden><div class="box">
   <img src="logo.png" alt="Sushinaa" id="mt-logo">
-  <h2>Temporarily unavailable</h2>
-  <p>Please check back later.</p>
+  <h2>Data connection error</h2>
+  <p>Data access from Drive is not fetching, and the app APIs (Snoonu, Talabat, Keeta, Rafeeq) are blocked. Sales data cannot be loaded right now.</p>
 </div></div>
 <script>
 // Maintenance mode: maint.json {"on":true} shows "Under update" to everyone except the owner login (remembered on this device).
